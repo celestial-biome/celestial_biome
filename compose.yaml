@@ -1,0 +1,52 @@
+services:
+  # --- Backend (Django) ---
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./src/backend:/app # ホットリロード用にローカルを同期
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SECRET_KEY=dev_secret_key
+      - DEBUG=True
+      - DATABASE_URL=postgres://user:password@db:5432/celestial_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # --- Frontend (Next.js) ---
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./src/frontend:/app
+      - /app/node_modules # ホスト側のnode_modules混入防止
+    ports:
+      - "3000:3000"
+    environment:
+      - WATCHPACK_POLLING=true # ホットリロードを確実にする設定
+    depends_on:
+      - backend
+
+  # --- Database (PostgreSQL) ---
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=celestial_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d celestial_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

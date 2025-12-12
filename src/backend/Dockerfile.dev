@@ -1,0 +1,10 @@
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+WORKDIR /app
+
+# 依存定義だけコピーしてインストール
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen
+
+# 開発サーバー起動コマンド (0.0.0.0で公開)
+CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
