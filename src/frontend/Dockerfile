@@ -1,9 +1,8 @@
 # ---------------------------------------------------
 # 1. Deps Stage: 依存パッケージのインストール
 # ---------------------------------------------------
-# ★修正: node:18 -> node:20
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# 開発環境に合わせて node:22-bookworm-slim を使用
+FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
@@ -12,8 +11,7 @@ RUN npm ci
 # ---------------------------------------------------
 # 2. Builder Stage: アプリのビルド
 # ---------------------------------------------------
-# ★修正: node:18 -> node:20
-FROM node:20-alpine AS builder
+FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -27,22 +25,19 @@ RUN npm run build
 # ---------------------------------------------------
 # 3. Runner Stage: 本番実行用イメージ
 # ---------------------------------------------------
-# ★修正: node:18 -> node:20
-FROM node:20-alpine AS runner
+FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Bookworm (Debian) なので adduser の構文が Alpine と少し異なりますが
+# node イメージには最初から 'node' ユーザーがいるのでそれを使います
+USER node
 
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-USER nextjs
-
-# ★修正: ENV key value 形式から ENV key=value 形式へ（警告対応）
 ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
 

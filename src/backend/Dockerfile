@@ -1,34 +1,27 @@
-# src/backend/Dockerfile
+# 開発環境と同じベースイメージを使用 (Python 3.12 + uv プリインストール済み)
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-# 1. Pythonベースイメージ
-FROM python:3.11-slim
-
-# 2. uv のバイナリを公式イメージからコピーしてくる (これが一番早くて確実です)
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-# 3. 環境設定
+# 環境設定
 ENV PYTHONUNBUFFERED=True
-# 仮想環境(.venv)の中にインストールさせる設定
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 
 WORKDIR /app
 
-# 4. 依存関係ファイルのコピー (requirements.txt ではなく pyproject.toml と uv.lock)
+# 依存関係ファイルのコピー
 COPY pyproject.toml uv.lock ./
 
-# 5. 依存関係のインストール
-# --frozen: lockファイルを無視せず厳密にインストール
-# --no-dev: 開発用パッケージを除外 (本番用なので)
+# 依存関係のインストール
+# --frozen: lockファイルを厳守
+# --no-dev: 開発用パッケージを除外
 RUN uv sync --frozen --no-dev
 
-# 6. パスの設定
-# uv はデフォルトで .venv を作るので、そこの bin にパスを通すとコマンドがそのまま使える
+# パスの設定 (uv が作る .venv へのパスを通す)
 ENV PATH="/app/.venv/bin:$PATH"
 
-# 7. ソースコードのコピー
+# ソースコードのコピー
 COPY . .
 
-# 8. 起動コマンド
-# gunicorn は .venv/bin/gunicorn にあるので、パスが通っていればそのまま呼べます
+# 起動コマンド
+# パスが通っているので gunicorn と書くだけでOK
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 celestial_biome.wsgi:application
