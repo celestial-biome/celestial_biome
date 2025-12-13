@@ -31,10 +31,19 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # DockerやLBからのアクセスを許可するために環境変数から取得
 # 開発中はとりあえず '*' (全許可) でも動きますが、以下のように書くとスマートです
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]').split(',')
-if DEBUG:
-    ALLOWED_HOSTS += ['*']
+# ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]').split(',')
+# if DEBUG:
+#     ALLOWED_HOSTS += ['*']
 
+# 1. ALLOWED_HOSTS
+# 環境変数がなければ '*' (全許可) をデフォルトにする
+# Cloud RunはURLが動的に変わるため、最初は '*' がトラブルが少ないです
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+
+# 2. CSRF_TRUSTED_ORIGINS の追加 (★重要)
+# Cloud Run (HTTPS) 経由で管理画面 (/admin) にログインするために必須です。
+# これがないと、ログインしようとした瞬間にエラーになります。
+CSRF_TRUSTED_ORIGINS = ['https://*.run.app']
 
 # Application definition
 
