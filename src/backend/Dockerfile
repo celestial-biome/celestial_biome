@@ -1,10 +1,22 @@
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+# src/backend/Dockerfile
 
-WORKDIR /app
+# 1. Pythonのベースイメージ
+FROM python:3.11-slim
 
-# 依存定義だけコピーしてインストール
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen
+# 2. ログがバッファされずにすぐ出力されるように設定 (Cloud Runで必須)
+ENV PYTHONUNBUFFERED=True
+ENV APP_HOME=/app
+WORKDIR $APP_HOME
 
-# 開発サーバー起動コマンド (0.0.0.0で公開)
-CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+# 3. 依存関係のインストール
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+# Gunicorn (本番用サーバー) が入っていなければ追加インストール
+RUN pip install gunicorn
+
+# 4. ソースコードのコピー
+COPY . ./
+
+# 5. Cloud Run はポート 8080 を環境変数 $PORT で渡してくる
+# Django (Gunicorn) をそのポートで起動させる
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 celestial_biome.wsgi:application
