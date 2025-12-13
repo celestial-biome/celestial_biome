@@ -2,7 +2,7 @@
 # 1. Deps Stage: 依存パッケージのインストール
 # ---------------------------------------------------
 # ★修正: node:18 -> node:20
-FROM node:22-bookworm-slim AS deps
+FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN npm ci
 # 2. Builder Stage: アプリのビルド
 # ---------------------------------------------------
 # ★修正: node:18 -> node:20
-FROM node:22-bookworm-slim AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -28,7 +28,7 @@ RUN npm run build
 # 3. Runner Stage: 本番実行用イメージ
 # ---------------------------------------------------
 # ★修正: node:18 -> node:20
-FROM node:22-bookworm-slim AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
