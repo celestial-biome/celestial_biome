@@ -22,6 +22,10 @@ ENV PATH="/app/.venv/bin:$PATH"
 # ソースコードのコピー
 COPY . .
 
+# ビルド時はDB接続などもなく SECRET_KEY もないので、ダミーを入れて通します
+RUN SECRET_KEY=dummy_for_build \
+    uv run python manage.py collectstatic --noinput
+
 # 起動コマンド
 # パスが通っているので gunicorn と書くだけでOK
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 config.wsgi:application
