@@ -77,17 +77,27 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-DATABASES = {
-    'default': dj_database_url.config(
-        # compose.yaml で定義した DATABASE_URL を読み込む
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+# データベース設定
+# 環境変数 DB_HOST がある場合(=Cloud Run)はそれを使用、なければローカル(SQLite等)
+if os.environ.get('DB_HOST'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            'HOST': os.environ.get('DB_HOST'), # Terraformが設定した /cloudsql/... が入る
+            'PORT': '', # Unixソケット接続の場合は空にする
+        }
+    }
+else:
+    # ローカル開発用の設定 (今まで通りのSQLiteなど)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
