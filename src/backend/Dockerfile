@@ -24,4 +24,4 @@ COPY . .
 
 # 起動コマンド
 # パスが通っているので gunicorn と書くだけでOK
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 celestial_biome.wsgi:application
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 config.wsgi:application
