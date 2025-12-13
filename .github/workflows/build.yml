@@ -40,7 +40,7 @@ jobs:
           context: ./src/backend
           # Dockerfile.dev ではなく本番用 Dockerfile を使う想定
           # もし Dockerfile がない場合は Dockerfile.dev を指定するか、本番用を作成してください
-          file: ./src/backend/Dockerfile 
+          file: ./src/backend/Dockerfile.dev
           push: true
           tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
 
@@ -49,6 +49,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./src/frontend
-          file: ./src/frontend/Dockerfile # 本番用Dockerfileがある前提
+          file: ./src/frontend/Dockerfile.dev # 本番用Dockerfileがある前提
           push: true
           tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}
