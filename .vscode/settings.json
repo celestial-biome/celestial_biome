@@ -1,44 +1,55 @@
 {
-  // Python設定
+    // vscode のプラグインに Biome をインストールする
+  "biome.configurationPath": "./src/frontend/biome.json",
+  "biome.lsp.bin": "./src/frontend/node_modules/.bin/biome",
+
+    // vscode のプラグインに Ruff をインストールする
+    // --- Ruff を backend に向ける（monorepo対策）---
+  "ruff.configuration": "${workspaceFolder}/src/backend/pyproject.toml",
+  "ruff.importStrategy": "fromEnvironment",
+  "ruff.interpreter": ["${workspaceFolder}/src/backend/.venv/bin/python"],
+  "ruff.path": ["${workspaceFolder}/src/backend/.venv/bin/ruff"],
+  "ruff.enable": true,
+
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.fixAll": "explicit",
-      "source.organizeImports": "explicit"
+      "source.fixAll.ruff": "always",
+      "source.organizeImports.ruff": "always"
     }
   },
-  // TypeScript/JavaScript設定
+
   "[javascript]": {
     "editor.defaultFormatter": "biomejs.biome",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "quickfix.biome": "explicit",
-      "source.organizeImports.biome": "explicit"
-    }
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome",
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "quickfix.biome": "explicit",
-      "source.organizeImports.biome": "explicit"
-    }
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome",
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "quickfix.biome": "explicit",
-      "source.organizeImports.biome": "explicit"
+      "source.fixAll.biome": "always",
+      "source.organizeImports.biome": "always"
     }
   },
   "[javascriptreact]": {
     "editor.defaultFormatter": "biomejs.biome",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "quickfix.biome": "explicit",
-      "source.organizeImports.biome": "explicit"
+      "source.fixAll.biome": "always",
+      "source.organizeImports.biome": "always"
+    }
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.biome": "always",
+      "source.organizeImports.biome": "always"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.biome": "always",
+      "source.organizeImports.biome": "always"
+    }
   }
- }
 }
