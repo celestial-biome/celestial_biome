@@ -49,11 +49,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -146,3 +148,15 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoiseを使って圧縮・キャッシュを行う設定
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Cloud Runのドメインからのアクセスを許可します
+# 今は疎通確認なので、Cloud Runの全ドメインを許可する設定が簡単で安全です
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://.*\.run\.app$',
+]
+
+# 本番のNext.jsのURLと、ローカル開発のURLを許可します
+CORS_ALLOWED_ORIGINS = [
+    # "https://celestial-frontend-617827263662.asia-northeast1.run.app", # ★あなたのFrontend URLに書き換えてください
+    "http://localhost:3000",
+]
