@@ -65,30 +65,32 @@
 // }
 
 // 以下はテスト疎通確認のテストデプロイ用↓
-"use client"; // クライアントコンポーネントとして動作
+'use client'; // クライアントコンポーネントとして動作
 
 import { useEffect, useState } from 'react';
 
 export default function Home() {
   const [message, setMessage] = useState<string>('Loading...');
 
-useEffect(() => {
+  useEffect(() => {
     // ★修正: 環境変数があればそれを使用、なければlocalhost (開発用)
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    
+
     // スラッシュの重複を防ぐための結合処理
     const targetUrl = `${apiUrl.replace(/\/$/, '')}/api/hello/`;
 
     fetch(targetUrl)
-      .then(res => res.json())
-      .then(data => setMessage(data.message))
-      .catch(err => setMessage('Error: ' + err.message));
+      .then((res) => res.json())
+      .then((data) => setMessage(data.message))
+      .catch((err) => setMessage('Error: ' + err.message));
   }, []);
 
   return (
     <div style={{ padding: 20 }}>
       <h1>Communication Test</h1>
-      <p>Backend says: <strong>{message}</strong></p>
+      <p>
+        Backend says: <strong>{message}</strong>
+      </p>
     </div>
   );
 }
