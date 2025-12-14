@@ -31,5 +31,10 @@
       "jsxQuoteStyle": "double",
       "semicolons": "always"
     }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   }
 }

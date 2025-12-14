@@ -82,7 +82,7 @@ export default function Home() {
     fetch(targetUrl)
       .then((res) => res.json())
       .then((data) => setMessage(data.message))
-      .catch((err) => setMessage('Error: ' + err.message));
+      .catch((err) => setMessage(`Error: ${err.message}`));
   }, []);
 
   return (
