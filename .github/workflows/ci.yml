@@ -1,0 +1,78 @@
+name: CI (Lint & Format Check)
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'src/**' # src配下の変更のみ検知
+  pull_request:
+    branches: ['main']
+    paths:
+      - 'src/**'
+
+jobs:
+  # ---------------------------------------------------
+  # 1. Backend Check (Ruff)
+  # ---------------------------------------------------
+  backend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Python 3.12 セットアップ
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # uv のインストール
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      # 依存関係のインストール (Ruffを含むDev依存も入れる)
+      - name: Install dependencies
+        run: |
+          cd src/backend
+          uv sync --dev --frozen
+
+      # Ruff による Lint チェック (バグや非推奨な書き方がないか)
+      - name: Run Ruff Lint
+        run: |
+          cd src/backend
+          uv run ruff check .
+
+      # Ruff によるフォーマットチェック (形が崩れていないか)
+      # --check をつけると、修正はせず「崩れていたらエラー」を返します
+      - name: Run Ruff Format Check
+        run: |
+          cd src/backend
+          uv run ruff format --check .
+
+  # ---------------------------------------------------
+  # 2. Frontend Check (Biome)
+  # ---------------------------------------------------
+  frontend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node.js 22 セットアップ
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+
+      # 依存関係のインストール
+      - name: Install dependencies
+        run: |
+          cd src/frontend
+          npm ci
+
+      # Biome によるチェック (Lint & Format)
+      # "biome ci" コマンドは CI 環境専用の厳格なチェックを行います
+      - name: Run Biome CI
+        run: |
+          cd src/frontend
+          npx biome ci .

@@ -12,3 +12,65 @@ dependencies = [
     "psycopg[binary]>=3.3.2",
     "whitenoise>=6.11.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.9",
+]
+
+[tool.ruff]
+# 除外するディレクトリ
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "**/migrations/*.py", # マイグレーションファイルはチェックしない
+]
+
+# 1行の文字数（Djangoは長くなりがちなので120くらいがおすすめ）
+line-length = 120
+indent-width = 4
+
+[tool.ruff.lint]
+# 有効にするルール
+# E: pycodestyle errors
+# W: pycodestyle warnings
+# F: Pyflakes
+# I: isort (importの並び順整理)
+# B: flake8-bugbear
+# DJ: flake8-django (Django固有のルール)
+select = ["E", "W", "F", "I", "B", "DJ"]
+ignore = []
+
+# 自動修正可能なルール
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
