@@ -1,0 +1,44 @@
+repos:
+  # 汎用的なチェックツール
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^src/frontend/node_modules/
+      - id: end-of-file-fixer
+        exclude: ^src/frontend/node_modules/
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # ローカルツール (uv & npm)
+  - repo: local
+    hooks:
+      # ---------------------------------------------------
+      # Backend (Ruff) - 修正箇所
+      # ---------------------------------------------------
+      - id: ruff-check
+        name: Ruff Linter
+        # ★修正: --directory ではなく --project を使用
+        entry: uv run --project src/backend ruff check --fix
+        language: system
+        types: [python]
+        files: ^src/backend/
+
+      - id: ruff-format
+        name: Ruff Formatter
+        # ★修正: --directory ではなく --project を使用
+        entry: uv run --project src/backend ruff format
+        language: system
+        types: [python]
+        files: ^src/backend/
+
+      # ---------------------------------------------------
+      # Frontend (Biome) - そのままでOK
+      # ---------------------------------------------------
+      - id: biome-check
+        name: Biome Check
+        # ここは '.' (全体) を対象にしているのでそのままで動きます
+        entry: bash -c 'cd src/frontend && npx biome check --write --no-errors-on-unmatched --files-ignore-unknown=true .'
+        language: system
+        pass_filenames: false # ファイル名を渡さず、entryコマンドの '.' で全スキャンさせる設定
+        files: ^src/frontend/
