@@ -66,65 +66,68 @@ celestial_biome
 └── terraform               # Infrastructure definitions
 ```
 
-💻 Local Development
-Prerequisites:
+## 💻 Local Development
 
-Docker & Docker Compose
+### Prerequisites:
 
-uv (Python Package Manager)
+- Docker & Docker Compose
 
-Node.js v22+ & npm
+- uv (Python Package Manager)
+
+- Node.js v22+ & npm
 
 1. Setup Backend
-   Backend の依存関係は uv で管理されています。
+   Backend の依存関係は `uv` で管理されています。
 
-Bash
-
+```text
 cd src/backend
-uv sync 2. Setup Frontend
-Frontend の依存関係をインストールします。
+uv sync
+```
 
-Bash
+2. Setup Frontend
+   Frontend の依存関係をインストールします。
 
+```text
 cd src/frontend
-npm install 3. Start Application
-Docker Compose を使用して開発環境（Hot Reload 有効）を起動します。
+npm install
+```
 
-Bash
+3. Start Application
+   Docker Compose を使用して開発環境（Hot Reload 有効）を起動します。
 
+```text
 # プロジェクトルートで実行
 
 docker compose up --build
-Frontend: http://localhost:3000
+```
 
-Backend API: http://localhost:8000
+- Frontend: http://localhost:3000
 
-Admin Panel: http://localhost:8000/admin/
+- Backend API: http://localhost:8000
 
-⚙️ Operational Rules & Workflows
+- Admin Panel: http://localhost:8000/admin/
 
-1. Schema Driven Development
+## ⚙️ Operational Rules & Workflows
+
+### 1. Schema Driven Development
 
 Backend と Frontend の型同期は、OpenAPI スキーマを介して行います。
 
-Backend: モデルや API に変更を加える。
+1.  Backend: モデルや API に変更を加える。
+2.  Backend: `drf-spectacular` 経由で `schema.yml` (OpenAPI) を生成する。
+3.  Frontend: `openapi-typescript` を実行し、Backend の型定義を TypeScript 型として自動生成・取り込みを行う。
 
-Backend: drf-spectacular 経由で schema.yml (OpenAPI) を生成する。
+### 2. Code Quality (Pre-commit)
 
-Frontend: openapi-typescript を実行し、Backend の型定義を TypeScript 型として自動生成・取り込みを行う。
+コミット時に `pre-commit` フックが作動し、コード品質を強制します。
 
-2. Code Quality (Pre-commit)
+- Backend: `Ruff` による Lint と Format 修正。
 
-コミット時に pre-commit フックが作動し、コード品質を強制します。
-
-Backend: Ruff による Lint と Format 修正。
-
-Frontend: Biome による Lint と Format 修正。
+- Frontend: `Biome` による Lint と Format 修正。
 
 手動実行する場合：
 
-Bash
-
+```text
 # Backend (src/backend)
 
 uv run ruff check --fix .
@@ -132,18 +135,24 @@ uv run ruff format .
 
 # Frontend (src/frontend)
 
-npx biome check --write . 3. Async Operations
-非同期処理が必要な場合は、Celery/Redis 構成ではなく、Google Cloud Tasks を使用してください。
+npx biome check --write .
+```
 
-🚀 Deployment & Operations
-Deployment
-GitHub Actions により、main ブランチへのプッシュで自動的に Build と Cloud Run への Deploy が行われます。
+### 3. Async Operations
 
-Database Migration (Production)
+非同期処理が必要な場合は、Celery/Redis 構成ではなく、**Google Cloud Tasks** を使用してください。
+
+## 🚀 Deployment & Operations
+
+### Deployment
+
+GitHub Actions により、`main` ブランチへのプッシュで自動的に Build と Cloud Run への Deploy が行われます。
+
+### Database Migration (Production)
+
 本番環境 (Cloud SQL) へのマイグレーションは、Cloud Run Jobs を使用して安全に実行します。
 
-Bash
-
+```text
 # 実行例 (変数は環境に合わせて設定)
 
 gcloud run jobs deploy migrate-db \
@@ -155,12 +164,15 @@ gcloud run jobs deploy migrate-db \
   --set-env-vars GCP_PROJECT_ID=$PROJECT_ID \
  --command "python,manage.py,migrate" \
  --execute-now
-Superuser Creation
+```
+
+### Superuser Creation
+
 管理ユーザーの作成も同様に Cloud Run Jobs 経由で行います。
 
-Bash
-
+```text
 gcloud run jobs deploy create-superuser \
  --image $IMAGE \
  --command "python,manage.py,createsuperuser,--noinput" \
  --execute-now
+```
