@@ -1,3 +1,4 @@
 administrator/
 .vscode/
 Makefile
+src/backend/data/*.bsp

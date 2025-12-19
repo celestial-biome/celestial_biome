@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "rest_framework",
+    "drf_spectacular",
+    "astronomy",
 ]
 
 MIDDLEWARE = [
@@ -149,3 +152,17 @@ CORS_ALLOWED_ORIGINS = [
     # "https://celestial-frontend-617827263662.asia-northeast1.run.app", # ★あなたのFrontend URLに書き換えてください
     "http://localhost:3000",
 ]
+
+# Django REST Framework の設定
+REST_FRAMEWORK = {
+    # スキーマ生成クラスとして drf-spectacular を指定
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# drf-spectacular の設定
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Celestial Biome API",
+    "DESCRIPTION": "Space, Nature, and Coffee.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
