@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-// バックエンドの内部URL
-const BACKEND_URL = 'http://backend:8000';
+// 環境変数がない場合はローカル開発用の値をデフォルトに使う
+const BACKEND_URL = process.env.BACKEND_URL || 'http://backend:8000';
 
 export async function GET(
   request: NextRequest,
