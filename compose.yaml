@@ -14,7 +14,7 @@ services:
       - DEBUG=True
       - DATABASE_URL=postgres://user:password@db:5432/celestial_db
       - GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/gcp-creds.json # ライブラリに「認証キーはここにあるよ」と伝えます
-      - GOOGLE_CLOUD_PROJECT=${GCP_PROJECT_ID} # 変数から読み込む
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT} # 変数から読み込む
     depends_on:
       db:
         condition: service_healthy
