@@ -3,3 +3,4 @@ administrator/
 Makefile
 src/backend/data/*.bsp
 src/backend/.env
+.env
