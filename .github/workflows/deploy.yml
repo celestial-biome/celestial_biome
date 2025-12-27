@@ -52,6 +52,12 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
 
+      - name: Update Cloud Run Job
+        run: |
+          gcloud run jobs update ingest-space-weather-job \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
       # 5. Build & Push (Frontend)
       - name: Build and Push Frontend
         uses: docker/build-push-action@v5
