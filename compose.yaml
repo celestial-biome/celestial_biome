@@ -6,12 +6,15 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./src/backend:/app # ホットリロード用にローカルを同期
+      - ~/.config/gcloud/application_default_credentials.json:/tmp/keys/gcp-creds.json:ro # google の認証情報はホストからマウント
     ports:
       - "8000:8000"
     environment:
       - DJANGO_SECRET_KEY=dev_secret_key
       - DEBUG=True
       - DATABASE_URL=postgres://user:password@db:5432/celestial_db
+      - GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/gcp-creds.json # ライブラリに「認証キーはここにあるよ」と伝えます
+      - GOOGLE_CLOUD_PROJECT=${GCP_PROJECT_ID} # 変数から読み込む
     depends_on:
       db:
         condition: service_healthy
