@@ -21,6 +21,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Testing**     | pytest                | Latest      |                          |
 | **Monitoring**  | Sentry                | Latest      | Python SDK               |
 | **Async**       | **Cloud Tasks**       | -           | No Celery/Redis          |
+| **Data Analysis**       | **Pandas**       | Latest           | Data manipulation          |
 
 ### Frontend (Client Side)
 
@@ -33,6 +34,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Lint/Fmt**  | **Biome**          | Latest      | **ESLint/Prettier 使用禁止** |
 | **Type Gen**  | openapi-typescript | Latest      | Schema Driven Dev            |
 | **Testing**   | Vitest             | Latest      |                              |
+| **Visualization**   | Recharts             | Latest      | Charts & Graphs      |
 
 ### Infrastructure
 
@@ -40,7 +42,9 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | ------------ | ------------------- | ------------------------------- |
 | **Cloud**    | Google Cloud (GCP)  |                                 |
 | **Compute**  | Cloud Run           | Frontend & Backend (Standalone) |
+| **ETL / Batch**  | Cloud Run Jobs           | Scheduled by Cloud Scheduler |
 | **Database** | Cloud SQL           | **PostgreSQL 16**               |
+| **Data Warehouse** | BigQuery           | **Time-series data storage**               |
 | **Storage**  | Cloud Storage (GCS) | Static & Media files            |
 | **IaC**      | Terraform           | Infrastructure management       |
 | **CI/CD**    | GitHub Actions      | CI, Build, Deploy               |
@@ -141,6 +145,22 @@ npx biome check --write .
 ### 3. Async Operations
 
 非同期処理が必要な場合は、Celery/Redis 構成ではなく、**Google Cloud Tasks** を使用してください。
+
+### 4. Data Pipeline (Space Weather)
+
+宇宙天気データ（NOAA SWPC）を収集・蓄積し、可視化するパイプラインを構築しています。
+
+1.  **Ingestion (ETL)**: Cloud Run Jobs で Python スクリプト (`ingest_space_weather`) を実行し、NOAA から JSON データを取得・整形。
+2.  **Scheduling**: Cloud Scheduler により 1時間ごとに定期実行。
+3.  **Storage**: BigQuery (`space_weather_metrics` table) に時系列データとして蓄積。
+4.  **Serving**: Backend API が BigQuery から直近データを取得し、Frontend (Recharts) で可視化。
+
+### Management Commands
+- **Ingest Space Weather Data**
+  NOAA から宇宙天気データを手動で取得・保存します。
+  ```bash
+  # ローカル実行 (.env に GCP_PROJECT_ID が必要)
+  uv run python manage.py ingest_space_weather --days 7
 
 ## 🚀 Deployment & Operations
 
