@@ -34,7 +34,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Lint/Fmt**      | **Biome**          | Latest      | **ESLint/Prettier 使用禁止** |
 | **Type Gen**      | openapi-typescript | Latest      | Schema Driven Dev            |
 | **Testing**       | Vitest             | Latest      |                              |
-| **Visualization** | Recharts           | Latest      | Charts & Graphs              |
+| **Visualization** | Echarts            | 6.          | Charts & Graphs              |
 
 ### Infrastructure
 

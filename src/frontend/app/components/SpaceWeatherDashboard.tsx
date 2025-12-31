@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-// echarts-for-react はブラウザAPI依存があるので SSR 無効化
+// SSR 無効化
 const ReactECharts = dynamic(async () => (await import('echarts-for-react')).default, {
   ssr: false,
 });
@@ -19,30 +19,26 @@ type WeatherData = {
   kp_index?: number;
 };
 
-// --- 用語解説データ（元のまま） ---
+// --- 用語解説データ ---
 const METRICS_INFO = [
   {
     label: 'GOES X-Ray Flux',
-    description:
-      '太陽フレアの強度を示す指標（対数スケール）。強度に応じてA, B, C, M, Xのクラスに分類されます。Mクラス以上が発生すると、地球の電離層が乱され、無線通信障害（デリンジャー現象）を引き起こす可能性があります。',
+    description: '太陽フレアの強度（対数）。Mクラス以上で無線通信障害のリスク。',
     color: 'text-orange-400',
   },
   {
     label: 'Solar Wind Speed',
-    description:
-      '太陽から吹き出すプラズマ（太陽風）の速度。通常は300〜400km/s程度ですが、コロナホールからの高速風やCME（コロナ質量放出）が到達すると500km/s以上に上昇し、地磁気を乱す大きな要因となります。',
+    description: '太陽風速度。高速風（500km/s超）は地磁気撹乱の要因。',
     color: 'text-emerald-400',
   },
   {
     label: 'IMF Bz (GSM)',
-    description:
-      '惑星間空間磁場（IMF）の南北成分。この値が「マイナス（南向き）」になると、地球の磁力線と結合してエネルギーが流入しやすくなり、磁気嵐やオーロラ活動が活発化します。',
+    description: '磁場の南北成分。南向き（マイナス）で磁気嵐のリスク増。',
     color: 'text-yellow-400',
   },
   {
     label: 'Planetary Kp Index',
-    description:
-      '地磁気の乱れ具合を0〜9の階級で表した指数。数値が大きいほど乱れが大きく、一般にKp=5以上で「磁気嵐」と判定されます。数値が高いと低緯度でもオーロラが見える可能性があります。',
+    description: '地磁気乱れ指数（0-9）。5以上で磁気嵐。',
     color: 'text-orange-500',
   },
 ] as const;
@@ -83,6 +79,7 @@ function flareClass(x: number | null | undefined) {
   return { label: 'A', tone: 'text-sky-300' };
 }
 
+// Mobile: パディングを減らして高さを抑える
 function StatChip({
   label,
   value,
@@ -96,13 +93,16 @@ function StatChip({
 }) {
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-      <div className="text-[11px] text-zinc-400">{label}</div>
-      <div className={cn('text-sm font-semibold tracking-wide tabular-nums', tone)}>{value}</div>
-      {sub ? <div className="text-[11px] text-zinc-500">{sub}</div> : null}
+      <div className="text-[10px] md:text-[11px] text-zinc-400">{label}</div>
+      <div className={cn('text-sm md:text-base font-semibold tracking-wide tabular-nums', tone)}>
+        {value}
+      </div>
+      {sub ? <div className="text-[10px] md:text-[11px] text-zinc-500 truncate">{sub}</div> : null}
     </div>
   );
 }
 
+// Mobile: パディング調整 (px-3 pt-3)
 function Card({
   title,
   subtitle,
@@ -115,19 +115,22 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
-      <div className="flex items-start justify-between gap-4 px-5 pt-5">
-        <div>
-          <h3 className="text-sm font-semibold text-zinc-100">{title}</h3>
-          {subtitle ? <p className="mt-1 text-xs text-zinc-400">{subtitle}</p> : null}
+    <section className="rounded-xl md:rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.03] shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+      <div className="flex items-start justify-between gap-2 px-3 pt-3 md:px-5 md:pt-5">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-zinc-100 truncate">{title}</h3>
+          {subtitle ? (
+            <p className="mt-0.5 text-[10px] md:text-xs text-zinc-400 truncate">{subtitle}</p>
+          ) : null}
         </div>
-        {right}
+        <div className="shrink-0">{right}</div>
       </div>
-      <div className="px-2 pb-4 pt-3">{children}</div>
+      <div className="px-1 pb-2 pt-2 md:px-2 md:pb-4 md:pt-3">{children}</div>
     </section>
   );
 }
 
+// --- ECharts Options Helpers (変更なし) ---
 function baseTooltip() {
   return {
     trigger: 'axis',
@@ -137,11 +140,13 @@ function baseTooltip() {
       lineStyle: { color: 'rgba(255,255,255,0.18)' },
       crossStyle: { color: 'rgba(255,255,255,0.18)' },
     },
-    backgroundColor: 'rgba(10,10,12,0.72)',
+    backgroundColor: 'rgba(10,10,12,0.85)', // 少し濃くして視認性アップ
     borderColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1,
-    textStyle: { color: 'rgba(255,255,255,0.92)' },
-    extraCssText: 'backdrop-filter: blur(10px); border-radius: 12px;',
+    textStyle: { color: 'rgba(255,255,255,0.92)', fontSize: 12 },
+    extraCssText:
+      'backdrop-filter: blur(8px); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);',
+    confine: true, // ツールチップが画面外にはみ出ないようにする
   } as const;
 }
 
@@ -154,14 +159,13 @@ function xAxisTime(showLabels: boolean) {
     axisLabel: showLabels
       ? {
           color: 'rgba(255,255,255,0.55)',
-          fontSize: 11,
+          fontSize: 10, // モバイル用に少し小さく
           formatter: (value: number) => {
             const d = new Date(value);
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const dd = String(d.getDate()).padStart(2, '0');
             const hh = String(d.getHours()).padStart(2, '0');
-            const mi = String(d.getMinutes()).padStart(2, '0');
-            return `${mm}/${dd} ${hh}:${mi}`;
+            return `${mm}/${dd} ${hh}:00`;
           },
         }
       : { show: false },
@@ -173,7 +177,7 @@ function yAxisValue() {
     type: 'value',
     axisLine: { show: true, lineStyle: { color: 'rgba(255,255,255,0.14)' } },
     axisTick: { show: false },
-    axisLabel: { color: 'rgba(255,255,255,0.55)', fontSize: 11 },
+    axisLabel: { color: 'rgba(255,255,255,0.55)', fontSize: 10, margin: 4 },
     splitLine: { lineStyle: { color: 'rgba(255,255,255,0.08)', type: 'dashed' } },
   } as const;
 }
@@ -187,14 +191,22 @@ function yAxisLog() {
     axisTick: { show: false },
     axisLabel: {
       color: 'rgba(255,255,255,0.55)',
-      fontSize: 11,
-      formatter: (v: number) => (v <= 0 ? '' : v.toExponential(0)),
+      fontSize: 10,
+      margin: 4,
+      formatter: (v: number) => {
+        // 10のマイナス乗を簡潔に
+        if (v === 1e-2) return '10⁻²';
+        if (v === 1e-4) return '10⁻⁴';
+        if (v === 1e-6) return '10⁻⁶';
+        if (v === 1e-8) return '10⁻⁸';
+        return '';
+      },
     },
     splitLine: { lineStyle: { color: 'rgba(255,255,255,0.08)', type: 'dashed' } },
   } as const;
 }
 
-// KPIが “—” になりがち問題を避ける：最後の有効値を使う
+// KPI Logic
 function findLastFinite<T>(arr: T[], pick: (t: T) => number | undefined | null) {
   for (let i = arr.length - 1; i >= 0; i--) {
     const v = pick(arr[i]);
@@ -228,7 +240,7 @@ function nearestY(points: XY[], x: number): number | null {
   return dl <= dr ? points[left]![1] : points[right]![1];
 }
 
-// X-ray帯（右端固定ラベル用）
+// X-ray帯
 const XRAY_BANDS = [
   {
     id: 'A',
@@ -237,7 +249,7 @@ const XRAY_BANDS = [
     baseOpacity: 0.28,
     activeOpacity: 0.95,
     fill: 'rgba(255,255,255,1)',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 600,
   },
   {
@@ -247,7 +259,7 @@ const XRAY_BANDS = [
     baseOpacity: 0.3,
     activeOpacity: 0.95,
     fill: 'rgba(255,255,255,1)',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 600,
   },
   {
@@ -257,7 +269,7 @@ const XRAY_BANDS = [
     baseOpacity: 0.33,
     activeOpacity: 0.98,
     fill: 'rgba(255,255,255,1)',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 700,
   },
   {
@@ -267,7 +279,7 @@ const XRAY_BANDS = [
     baseOpacity: 0.35,
     activeOpacity: 1.0,
     fill: 'rgba(251,146,60,1)',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 900,
   },
   {
@@ -277,7 +289,7 @@ const XRAY_BANDS = [
     baseOpacity: 0.35,
     activeOpacity: 1.0,
     fill: 'rgba(239,68,68,1)',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 900,
   },
 ] as const;
@@ -296,14 +308,12 @@ export default function SpaceWeatherDashboard() {
   const [data, setData] = useState<WeatherData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 秒刻み時計
   const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
     const id = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
 
-  // ECharts インスタンス同期
   const [readyCount, setReadyCount] = useState(0);
   const [xrayChart, setXrayChart] = useState<echarts.ECharts | null>(null);
   const xraySeriesRef = useRef<XY[]>([]);
@@ -326,7 +336,6 @@ export default function SpaceWeatherDashboard() {
     fetchData();
   }, []);
 
-  // 4チャートが揃ったら connect（hover / zoom 同期）
   useEffect(() => {
     if (readyCount < 4) return;
     try {
@@ -341,12 +350,10 @@ export default function SpaceWeatherDashboard() {
       const t = new Date(ts).getTime();
       return [t, v ?? null] as XY;
     };
-
     const xray = data.map((d) => toPoint(d.timestamp, d.xray_flux));
     const wind = data.map((d) => toPoint(d.timestamp, d.solar_wind_speed));
     const bz = data.map((d) => toPoint(d.timestamp, d.imf_bz));
     const kp = data.map((d) => toPoint(d.timestamp, d.kp_index));
-
     return { xray, wind, bz, kp };
   }, [data]);
 
@@ -361,11 +368,14 @@ export default function SpaceWeatherDashboard() {
 
   const flare = flareClass(lastXray?.value);
 
+  // --- Charts Options ---
+  // grid.right を微調整してスマホでの描画領域を広げる
+
   const xrayOption: EChartsOption = useMemo(() => {
     const tooltip = baseTooltip();
     return {
       animation: false,
-      grid: { left: 56, right: 26, top: 10, bottom: 14 },
+      grid: { left: 40, right: 20, top: 10, bottom: 14 }, // マージン縮小
       tooltip: {
         ...tooltip,
         formatter: (params: any) => {
@@ -374,12 +384,10 @@ export default function SpaceWeatherDashboard() {
           const v = p?.value?.[1];
           const val = v == null ? '—' : Number(v).toExponential(2);
           return `
-            <div style="font-size:11px; color:rgba(255,255,255,0.65); margin-bottom:6px;">
-              ${formatTsShort(ts)}
-            </div>
-            <div style="display:flex; justify-content:space-between; gap:12px;">
+            <div style="font-size:10px; color:rgba(255,255,255,0.65); margin-bottom:4px;">${formatTsShort(ts)}</div>
+            <div style="display:flex; justify-content:space-between; gap:10px;">
               <span style="color:rgba(255,255,255,0.65)">X-ray</span>
-              <b style="font-variant-numeric: tabular-nums;">${val}</b>
+              <b style="font-family:monospace">${val}</b>
             </div>
           `;
         },
@@ -396,8 +404,6 @@ export default function SpaceWeatherDashboard() {
           lineStyle: { width: 2, color: 'rgba(251,146,60,0.95)' },
           connectNulls: false,
           emphasis: { focus: 'series' },
-
-          // 帯（ラベルは graphic で描く）
           markArea: {
             silent: true,
             data: [
@@ -406,19 +412,6 @@ export default function SpaceWeatherDashboard() {
               [{ yAxis: 1e-6, itemStyle: { color: 'rgba(250,204,21,0.08)' } }, { yAxis: 1e-5 }],
               [{ yAxis: 1e-5, itemStyle: { color: 'rgba(251,146,60,0.14)' } }, { yAxis: 1e-4 }],
               [{ yAxis: 1e-4, itemStyle: { color: 'rgba(239,68,68,0.18)' } }, { yAxis: 1e-2 }],
-            ],
-          },
-          markLine: {
-            silent: true,
-            symbol: ['none', 'none'],
-            lineStyle: { color: 'rgba(255,255,255,0.14)', type: 'dashed' },
-            label: { show: false },
-            data: [
-              { yAxis: 1e-8 },
-              { yAxis: 1e-7 },
-              { yAxis: 1e-6 },
-              { yAxis: 1e-5 },
-              { yAxis: 1e-4 },
             ],
           },
         },
@@ -430,7 +423,7 @@ export default function SpaceWeatherDashboard() {
     const tooltip = baseTooltip();
     return {
       animation: false,
-      grid: { left: 56, right: 22, top: 10, bottom: 14 },
+      grid: { left: 40, right: 10, top: 10, bottom: 14 },
       tooltip: {
         ...tooltip,
         formatter: (params: any) => {
@@ -439,12 +432,10 @@ export default function SpaceWeatherDashboard() {
           const v = p?.value?.[1];
           const val = v == null ? '—' : `${Math.round(v)} km/s`;
           return `
-            <div style="font-size:11px; color:rgba(255,255,255,0.65); margin-bottom:6px;">
-              ${formatTsShort(ts)}
-            </div>
-            <div style="display:flex; justify-content:space-between; gap:12px;">
+            <div style="font-size:10px; color:rgba(255,255,255,0.65); margin-bottom:4px;">${formatTsShort(ts)}</div>
+            <div style="display:flex; justify-content:space-between; gap:10px;">
               <span style="color:rgba(255,255,255,0.65)">Wind</span>
-              <b style="font-variant-numeric: tabular-nums;">${val}</b>
+              <b style="font-family:monospace">${val}</b>
             </div>
           `;
         },
@@ -470,7 +461,7 @@ export default function SpaceWeatherDashboard() {
     const tooltip = baseTooltip();
     return {
       animation: false,
-      grid: { left: 56, right: 22, top: 10, bottom: 14 },
+      grid: { left: 40, right: 10, top: 10, bottom: 14 },
       tooltip: {
         ...tooltip,
         formatter: (params: any) => {
@@ -479,12 +470,10 @@ export default function SpaceWeatherDashboard() {
           const v = p?.value?.[1];
           const val = v == null ? '—' : `${Number(v).toFixed(1)} nT`;
           return `
-            <div style="font-size:11px; color:rgba(255,255,255,0.65); margin-bottom:6px;">
-              ${formatTsShort(ts)}
-            </div>
-            <div style="display:flex; justify-content:space-between; gap:12px;">
+            <div style="font-size:10px; color:rgba(255,255,255,0.65); margin-bottom:4px;">${formatTsShort(ts)}</div>
+            <div style="display:flex; justify-content:space-between; gap:10px;">
               <span style="color:rgba(255,255,255,0.65)">Bz</span>
-              <b style="font-variant-numeric: tabular-nums;">${val}</b>
+              <b style="font-family:monospace">${val}</b>
             </div>
           `;
         },
@@ -516,7 +505,7 @@ export default function SpaceWeatherDashboard() {
     const tooltip = baseTooltip();
     return {
       animation: false,
-      grid: { left: 56, right: 22, top: 10, bottom: 40 },
+      grid: { left: 40, right: 10, top: 10, bottom: 40 },
       tooltip: {
         ...tooltip,
         formatter: (params: any) => {
@@ -525,12 +514,10 @@ export default function SpaceWeatherDashboard() {
           const v = p?.value?.[1];
           const val = v == null ? '—' : `${Math.round(v)}`;
           return `
-            <div style="font-size:11px; color:rgba(255,255,255,0.65); margin-bottom:6px;">
-              ${formatTsShort(ts)}
-            </div>
-            <div style="display:flex; justify-content:space-between; gap:12px;">
+            <div style="font-size:10px; color:rgba(255,255,255,0.65); margin-bottom:4px;">${formatTsShort(ts)}</div>
+            <div style="display:flex; justify-content:space-between; gap:10px;">
               <span style="color:rgba(255,255,255,0.65)">Kp</span>
-              <b style="font-variant-numeric: tabular-nums;">${val}</b>
+              <b style="font-family:monospace">${val}</b>
             </div>
           `;
         },
@@ -547,8 +534,8 @@ export default function SpaceWeatherDashboard() {
         {
           type: 'slider',
           xAxisIndex: 0,
-          height: 18,
-          bottom: 10,
+          height: 16,
+          bottom: 5,
           borderColor: 'rgba(255,255,255,0.10)',
           fillerColor: 'rgba(255,255,255,0.06)',
           backgroundColor: 'rgba(255,255,255,0.02)',
@@ -577,13 +564,14 @@ export default function SpaceWeatherDashboard() {
     };
   }, [seriesData.kp]);
 
-  // ---- X-ray 右端固定ラベル（薄く常時表示 + hover時のみ濃く） ----
+  // ---- X-ray Graphic Labels (Chart Ref logic) ----
+  // (ロジックは以前のままですが、文字サイズなどを少し調整)
   useEffect(() => {
     if (!xrayChart || data.length === 0) return;
     if ((xrayChart as any).isDisposed?.()) return;
 
-    const GRID_RIGHT = 26; // xrayOption.grid.right と一致させる
-    const INSET = 10; // 右端から内側
+    const GRID_RIGHT = 20;
+    const INSET = 6;
     const xmin = new Date(data[0]!.timestamp).getTime();
     const xmax = new Date(data[data.length - 1]!.timestamp).getTime();
 
@@ -600,7 +588,6 @@ export default function SpaceWeatherDashboard() {
       return (x0 + x1) / 2;
     };
 
-    // ✅ convertToPixel が undefined を返す瞬間があるので安全化（seriesIndex:0 で確実に座標系を指定）
     const safePix = (x: number, y: number) => {
       try {
         const r = xrayChart.convertToPixel({ seriesIndex: 0 }, [x, y]);
@@ -614,13 +601,12 @@ export default function SpaceWeatherDashboard() {
       const x = getXInsideCurrentView();
       if (!Number.isFinite(x)) return [];
 
-      const graphics = XRAY_BANDS.map((b) => {
+      return XRAY_BANDS.map((b) => {
         const p1 = safePix(x, b.y1);
         const p2 = safePix(x, b.y2);
         if (!p1 || !p2) return null;
 
         const y = (p1[1]! + p2[1]!) / 2;
-
         const active = activeId === b.id;
         const opacity = active ? b.activeOpacity : b.baseOpacity;
         const weight = active ? Math.max(800, b.fontWeight) : b.fontWeight;
@@ -638,24 +624,21 @@ export default function SpaceWeatherDashboard() {
             opacity,
             fontSize: b.fontSize,
             fontWeight: weight,
-            fontFamily: 'ui-sans-serif, system-ui, -apple-system',
+            fontFamily: 'sans-serif',
             align: 'right',
             verticalAlign: 'middle',
           },
         };
       }).filter(Boolean) as any[];
-
-      return graphics;
     };
 
     let raf = 0;
-
     const updateLabels = () => {
       if ((xrayChart as any).isDisposed?.()) return;
       if (raf) cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         const graphics = buildGraphics(hoverBandRef.current);
-        if (!graphics.length) return; // 座標系未確定の瞬間はスキップ（落ちない）
+        if (!graphics.length) return;
         xrayChart.setOption({ graphic: graphics }, { replaceMerge: ['graphic'], lazyUpdate: true });
       });
     };
@@ -663,27 +646,21 @@ export default function SpaceWeatherDashboard() {
     const onUpdateAxisPointer = (evt: any) => {
       const axisInfo =
         evt?.axesInfo?.find((a: any) => a.axisDimension === 'x') ?? evt?.axesInfo?.[0];
-
       const x = axisInfo?.value;
       if (typeof x !== 'number') return;
-
       const y = nearestY(xraySeriesRef.current, x);
       const id = bandIdFromXray(y);
-
       if (hoverBandRef.current !== id) {
         hoverBandRef.current = id;
         updateLabels();
       }
     };
-
     const onGlobalOut = () => {
       if (hoverBandRef.current !== null) {
         hoverBandRef.current = null;
         updateLabels();
       }
     };
-
-    // 初回は「座標系がまだ」の可能性があるので finished でも必ず更新
     requestAnimationFrame(updateLabels);
     xrayChart.on('finished', updateLabels);
     xrayChart.on('dataZoom', updateLabels);
@@ -701,14 +678,11 @@ export default function SpaceWeatherDashboard() {
     };
   }, [xrayChart, data]);
 
-  // ---- onChartReady ----
   const onChartReadyXray = (chart: echarts.ECharts) => {
     chart.group = 'spaceWeatherGroup';
     setXrayChart(chart);
     setReadyCount((c) => Math.min(4, c + 1));
   };
-
-  // ✅ 他チャートにも group を設定（これがないと connect 同期が効かない/弱い）
   const onChartReadyOther = (chart: echarts.ECharts) => {
     chart.group = 'spaceWeatherGroup';
     setReadyCount((c) => Math.min(4, c + 1));
@@ -718,26 +692,29 @@ export default function SpaceWeatherDashboard() {
   if (!data.length) return <div className="text-white p-4">No data available.</div>;
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-[radial-gradient(900px_500px_at_20%_-10%,rgba(56,189,248,0.12),transparent_55%),radial-gradient(900px_500px_at_80%_0%,rgba(251,113,133,0.10),transparent_55%),linear-gradient(to_bottom,rgba(0,0,0,0.86),rgba(0,0,0,0.92))] p-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+    // Mobile: space-y-4 に短縮。 max-w-6xlは維持するが、左右余白は親コンテナに依存
+    <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-6">
+      <div className="rounded-2xl border border-white/10 bg-[radial-gradient(900px_500px_at_20%_-10%,rgba(56,189,248,0.12),transparent_55%),radial-gradient(900px_500px_at_80%_0%,rgba(251,113,133,0.10),transparent_55%),linear-gradient(to_bottom,rgba(0,0,0,0.86),rgba(0,0,0,0.92))] p-3 md:p-6">
+        {/* Header Area */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h2 className="text-xl text-white font-bold">Space Weather Dashboard (Last 7 Days)</h2>
-            <p className="mt-1 text-xs text-zinc-400">
-              hoverで4チャート同期 / ズームも同期（下のスライダー or トラックパッド）
+            <h2 className="text-lg md:text-xl text-white font-bold">Space Weather</h2>
+            <p className="mt-1 text-[10px] md:text-xs text-zinc-400 leading-snug">
+              Last 7 Days (Sync Zoom/Hover)
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-300 tabular-nums">
-              UTC&nbsp;{formatTs(nowMs, 'UTC')}
+          {/* Timestamp & Status: Mobileではグリッドでコンパクトに */}
+          <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:gap-2">
+            <div className="rounded-lg md:rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 md:px-3 md:py-2 text-[10px] md:text-xs text-zinc-300 tabular-nums text-center">
+              UTC {formatTs(nowMs, 'UTC').split(' ')[1]}
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-zinc-300 tabular-nums">
-              JST&nbsp;{formatTs(nowMs, 'Asia/Tokyo')}
+            <div className="rounded-lg md:rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 md:px-3 md:py-2 text-[10px] md:text-xs text-zinc-300 tabular-nums text-center">
+              JST {formatTs(nowMs, 'Asia/Tokyo').split(' ')[1]}
             </div>
             <div
               className={cn(
-                'rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold',
+                'col-span-2 md:col-span-1 rounded-lg md:rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm font-semibold text-center',
                 flare.tone,
               )}
             >
@@ -746,15 +723,12 @@ export default function SpaceWeatherDashboard() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        {/* KPI Grid: Gapを縮める */}
+        <div className="mt-4 grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-4">
           <StatChip
             label="GOES X-ray"
             value={lastXray ? lastXray.value.toExponential(2) : '—'}
-            sub={
-              lastXray
-                ? `at ${formatTsShort(new Date(lastXray.item.timestamp).getTime())}`
-                : 'class: —'
-            }
+            sub={lastXray ? formatTsShort(new Date(lastXray.item.timestamp).getTime()) : undefined}
             tone={flare.tone}
           />
           <StatChip
@@ -768,20 +742,25 @@ export default function SpaceWeatherDashboard() {
             tone={lastBz && lastBz.value < 0 ? 'text-amber-200' : 'text-zinc-200'}
           />
           <StatChip
-            label="Kp"
+            label="Kp Index"
             value={lastKp ? `${Math.round(lastKp.value)}` : '—'}
             tone="text-orange-200"
           />
         </div>
 
-        {/* Charts */}
-        <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+        {/* Charts: Mobileは1カラムだが高さを抑える */}
+        <div className="mt-4 md:mt-6 grid grid-cols-1 gap-4 md:gap-6 xl:grid-cols-2">
           <Card
             title="GOES X-ray Flux"
-            subtitle="W/m²（log scale）"
-            right={<span className={cn('text-sm font-semibold', flare.tone)}>{flare.label}</span>}
+            subtitle="W/m² (log)"
+            right={
+              <span className={cn('text-xs md:text-sm font-semibold', flare.tone)}>
+                {flare.label}
+              </span>
+            }
           >
-            <div className="h-[260px]">
+            {/* Mobile: 220px, PC: 260px */}
+            <div className="h-[220px] md:h-[260px]">
               <ReactECharts
                 option={xrayOption}
                 style={{ width: '100%', height: '100%' }}
@@ -792,7 +771,7 @@ export default function SpaceWeatherDashboard() {
           </Card>
 
           <Card title="Solar Wind Speed" subtitle="km/s">
-            <div className="h-[260px]">
+            <div className="h-[220px] md:h-[260px]">
               <ReactECharts
                 option={windOption}
                 style={{ width: '100%', height: '100%' }}
@@ -802,8 +781,8 @@ export default function SpaceWeatherDashboard() {
             </div>
           </Card>
 
-          <Card title="IMF Bz (GSM)" subtitle="nT（0ライン表示）">
-            <div className="h-[260px]">
+          <Card title="IMF Bz (GSM)" subtitle="nT">
+            <div className="h-[220px] md:h-[260px]">
               <ReactECharts
                 option={bzOption}
                 style={{ width: '100%', height: '100%' }}
@@ -813,8 +792,8 @@ export default function SpaceWeatherDashboard() {
             </div>
           </Card>
 
-          <Card title="Planetary Kp Index" subtitle="0–9（スライダーで範囲選択）">
-            <div className="h-[260px]">
+          <Card title="Planetary Kp Index" subtitle="0–9">
+            <div className="h-[220px] md:h-[260px]">
               <ReactECharts
                 option={kpOption}
                 style={{ width: '100%', height: '100%' }}
@@ -826,13 +805,20 @@ export default function SpaceWeatherDashboard() {
         </div>
       </div>
 
-      {/* 用語解説 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-gray-900/80 rounded-2xl border border-white/10">
-        <h3 className="text-lg font-bold text-white col-span-full mb-2">Metrics Reference</h3>
+      {/* 用語解説: Mobileではテキストサイズ調整 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 p-4 bg-gray-900/80 rounded-2xl border border-white/10">
+        <h3 className="text-base md:text-lg font-bold text-white col-span-full mb-1">
+          Metrics Reference
+        </h3>
         {METRICS_INFO.map((info) => (
-          <div key={info.label} className="bg-black/40 p-4 rounded-xl border border-gray-800/80">
-            <h4 className={`font-bold text-sm mb-1 ${info.color}`}>{info.label}</h4>
-            <p className="text-xs text-gray-400 leading-relaxed">{info.description}</p>
+          <div
+            key={info.label}
+            className="bg-black/40 p-3 md:p-4 rounded-xl border border-gray-800/80"
+          >
+            <h4 className={`font-bold text-xs md:text-sm mb-1 ${info.color}`}>{info.label}</h4>
+            <p className="text-[10px] md:text-xs text-gray-400 leading-relaxed">
+              {info.description}
+            </p>
           </div>
         ))}
       </div>
