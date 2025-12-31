@@ -143,11 +143,27 @@ uv run ruff format .
 npx biome check --write .
 ```
 
-### 3. Async Operations
+### 3. Testing
+
+Backend, Frontend 共に単体テスト環境が整備されています。
+開発時はこまめにテストを実行し、品質を担保してください。
+
+- **Backend (pytest)**:
+  ```bash
+  # src/backend で実行
+  uv run pytest
+  ```
+- **Frontend (Vitest)**:
+  ```bash
+  # src/frontend で実行
+  npm test
+  ```
+
+### 4. Async Operations
 
 非同期処理が必要な場合は、Celery/Redis 構成ではなく、**Google Cloud Tasks** を使用してください。
 
-### 4. Data Pipeline (Space Weather)
+### 5. Data Pipeline (Space Weather)
 
 宇宙天気データ（NOAA SWPC）を収集・蓄積し、可視化するパイプラインを構築しています。
 **Data Warehouse (BigQuery)** と **Data Mart (Cloud SQL)** を分離することで、分析用データの蓄積と Web アプリの高速応答を両立させています。
