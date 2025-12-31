@@ -34,7 +34,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Lint/Fmt**      | **Biome**          | Latest      | **ESLint/Prettier 使用禁止** |
 | **Type Gen**      | openapi-typescript | Latest      | Schema Driven Dev            |
 | **Testing**       | Vitest             | Latest      |                              |
-| **Visualization** | Echarts            | 6.          | Charts & Graphs              |
+| **Visualization** | Echarts            | 6.x         | Charts & Graphs              |
 
 ### Infrastructure
 
@@ -65,6 +65,7 @@ celestial_biome
 │   │   └── Dockerfile      # Prod: uv base
 │   └── frontend            # Next.js Root
 │       ├── app             # App Router
+│       │   └── components  # UI Components (Feature-based folders)
 │       ├── biome.json      # Biome Config
 │       └── Dockerfile      # Prod: Node 22 Multi-stage
 └── terraform               # Infrastructure definitions
