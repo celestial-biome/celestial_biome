@@ -1,5 +1,5 @@
 import SolarSystemMap from './components/SolarSystemMap';
-import SpaceWeatherDashboard from './components/SpaceWeatherDashboard';
+import SpaceWeatherDashboard from './components/space-weather';
 
 // export default function Home() {
 //   return (
