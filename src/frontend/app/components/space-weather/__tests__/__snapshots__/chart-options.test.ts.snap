@@ -1,0 +1,280 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Chart Options Generator > Windチャートのオプションが正しく生成されること 1`] = `
+{
+  "animation": false,
+  "dataZoom": [
+    {
+      "type": "inside",
+      "xAxisIndex": 0,
+    },
+  ],
+  "grid": {
+    "bottom": 14,
+    "left": 40,
+    "right": 10,
+    "top": 10,
+  },
+  "series": [
+    {
+      "connectNulls": false,
+      "data": [
+        [
+          1600000000000,
+          0.000015,
+        ],
+        [
+          1600003600000,
+          0.00002,
+        ],
+      ],
+      "emphasis": {
+        "focus": "series",
+      },
+      "lineStyle": {
+        "color": "rgba(52,211,153,0.95)",
+        "width": 2,
+      },
+      "name": "Solar Wind Speed",
+      "showSymbol": false,
+      "type": "line",
+    },
+  ],
+  "tooltip": {
+    "axisPointer": {
+      "crossStyle": {
+        "color": "rgba(255,255,255,0.18)",
+      },
+      "label": {
+        "backgroundColor": "rgba(0,0,0,0.65)",
+      },
+      "lineStyle": {
+        "color": "rgba(255,255,255,0.18)",
+      },
+      "type": "cross",
+    },
+    "backgroundColor": "rgba(10,10,12,0.85)",
+    "borderColor": "rgba(255,255,255,0.12)",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "backdrop-filter: blur(8px); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);",
+    "formatter": [Function],
+    "textStyle": {
+      "color": "rgba(255,255,255,0.92)",
+      "fontSize": 12,
+    },
+    "trigger": "axis",
+  },
+  "xAxis": {
+    "axisLabel": {
+      "show": false,
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "rgba(255,255,255,0.14)",
+      },
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "splitLine": {
+      "show": false,
+    },
+    "type": "time",
+  },
+  "yAxis": {
+    "axisLabel": {
+      "color": "rgba(255,255,255,0.55)",
+      "fontSize": 10,
+      "margin": 4,
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "rgba(255,255,255,0.14)",
+      },
+      "show": true,
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "splitLine": {
+      "lineStyle": {
+        "color": "rgba(255,255,255,0.08)",
+        "type": "dashed",
+      },
+    },
+    "type": "value",
+  },
+}
+`;
+
+exports[`Chart Options Generator > X-rayチャートのオプションが正しく生成されること 1`] = `
+{
+  "animation": false,
+  "dataZoom": [
+    {
+      "type": "inside",
+      "xAxisIndex": 0,
+    },
+  ],
+  "grid": {
+    "bottom": 14,
+    "left": 40,
+    "right": 20,
+    "top": 10,
+  },
+  "series": [
+    {
+      "connectNulls": false,
+      "data": [
+        [
+          1600000000000,
+          0.000015,
+        ],
+        [
+          1600003600000,
+          0.00002,
+        ],
+      ],
+      "emphasis": {
+        "focus": "series",
+      },
+      "lineStyle": {
+        "color": "rgba(251,146,60,0.95)",
+        "width": 2,
+      },
+      "markArea": {
+        "data": [
+          [
+            {
+              "itemStyle": {
+                "color": "rgba(74,222,128,0.06)",
+              },
+              "yAxis": 1e-8,
+            },
+            {
+              "yAxis": 1e-7,
+            },
+          ],
+          [
+            {
+              "itemStyle": {
+                "color": "rgba(163,230,53,0.06)",
+              },
+              "yAxis": 1e-7,
+            },
+            {
+              "yAxis": 0.000001,
+            },
+          ],
+          [
+            {
+              "itemStyle": {
+                "color": "rgba(250,204,21,0.08)",
+              },
+              "yAxis": 0.000001,
+            },
+            {
+              "yAxis": 0.00001,
+            },
+          ],
+          [
+            {
+              "itemStyle": {
+                "color": "rgba(251,146,60,0.14)",
+              },
+              "yAxis": 0.00001,
+            },
+            {
+              "yAxis": 0.0001,
+            },
+          ],
+          [
+            {
+              "itemStyle": {
+                "color": "rgba(239,68,68,0.18)",
+              },
+              "yAxis": 0.0001,
+            },
+            {
+              "yAxis": 0.01,
+            },
+          ],
+        ],
+        "silent": true,
+      },
+      "name": "X-ray",
+      "showSymbol": false,
+      "type": "line",
+    },
+  ],
+  "tooltip": {
+    "axisPointer": {
+      "crossStyle": {
+        "color": "rgba(255,255,255,0.18)",
+      },
+      "label": {
+        "backgroundColor": "rgba(0,0,0,0.65)",
+      },
+      "lineStyle": {
+        "color": "rgba(255,255,255,0.18)",
+      },
+      "type": "cross",
+    },
+    "backgroundColor": "rgba(10,10,12,0.85)",
+    "borderColor": "rgba(255,255,255,0.12)",
+    "borderWidth": 1,
+    "confine": true,
+    "extraCssText": "backdrop-filter: blur(8px); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);",
+    "formatter": [Function],
+    "textStyle": {
+      "color": "rgba(255,255,255,0.92)",
+      "fontSize": 12,
+    },
+    "trigger": "axis",
+  },
+  "xAxis": {
+    "axisLabel": {
+      "show": false,
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "rgba(255,255,255,0.14)",
+      },
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "splitLine": {
+      "show": false,
+    },
+    "type": "time",
+  },
+  "yAxis": {
+    "axisLabel": {
+      "color": "rgba(255,255,255,0.55)",
+      "fontSize": 10,
+      "formatter": [Function],
+      "margin": 4,
+    },
+    "axisLine": {
+      "lineStyle": {
+        "color": "rgba(255,255,255,0.14)",
+      },
+      "show": true,
+    },
+    "axisTick": {
+      "show": false,
+    },
+    "max": 0.01,
+    "min": 1e-9,
+    "splitLine": {
+      "lineStyle": {
+        "color": "rgba(255,255,255,0.08)",
+        "type": "dashed",
+      },
+    },
+    "type": "log",
+  },
+}
+`;
