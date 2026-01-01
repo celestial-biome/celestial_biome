@@ -81,7 +81,7 @@ export function useEarthquakes() {
       return {
         name: region,
         type: 'bar' as const,
-        stack: 'total',
+        stack: 'total' as const,
         // ★ ハイライト効果の設定
         emphasis: {
           focus: 'series' as const,
