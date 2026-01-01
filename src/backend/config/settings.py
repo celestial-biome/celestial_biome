@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "astronomy.apps.AstronomyConfig",
+    "geology.apps.GeologyConfig",
 ]
 
 MIDDLEWARE = [
