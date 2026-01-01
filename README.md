@@ -33,7 +33,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Styling**       | Tailwind CSS       | **v4**      |                              |
 | **Lint/Fmt**      | **Biome**          | Latest      | **ESLint/Prettier 使用禁止** |
 | **Type Gen**      | openapi-typescript | Latest      | Schema Driven Dev            |
-| **Testing**       | Vitest             | Latest      |                              |
+| **Testing**       | Vitest             | Latest      | Unit & Component Testing     |
 | **Visualization** | Echarts            | 6.x         | Charts & Graphs              |
 
 ### Infrastructure
@@ -55,7 +55,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 
 ```text
 celestial_biome
-├── .github/workflows       # CI/CD (ci.yml, deploy.yml)
+├── .github/workflows       # CI/CD (ci.yml, deploy.yml, frontend-test.yml, backend-test.yml)
 ├── .pre-commit-config.yaml # Code Quality Rules (Ruff & Biome)
 ├── compose.yaml            # Local Development (Hot Reload)
 ├── src
@@ -65,7 +65,8 @@ celestial_biome
 │   │   └── Dockerfile      # Prod: uv base
 │   └── frontend            # Next.js Root
 │       ├── app             # App Router
-│       │   └── components  # UI Components (Feature-based folders)
+│       │   └── components  # UI Components(Feature-based folders)
+│       ├── vitest.config.ts # Vitest Config
 │       ├── biome.json      # Biome Config
 │       └── Dockerfile      # Prod: Node 22 Multi-stage
 └── terraform               # Infrastructure definitions
@@ -153,11 +154,19 @@ Backend, Frontend 共に単体テスト環境が整備されています。
   # src/backend で実行
   uv run pytest
   ```
+  - `test_models.py`: DB モデルの CRUD テスト
+  - `test_commands.py`: 管理コマンド（Ingest, Sync）のロジックテスト
+  - `test_ingest.py`: 外部 API 連携（NOAA）のモックテスト
+  - `test_views.py`: API エンドポイントのレスポンス形式テスト
 - **Frontend (Vitest)**:
   ```bash
   # src/frontend で実行
   npm test
   ```
+  - `utils.test.ts`: ロジック関数の単体テスト
+  - `chart-options.test.ts`: グラフ設定（ECharts）のスナップショットテスト
+  - `ui-parts.test.tsx`: UI コンポーネントの描画テスト
+  - `useSpaceWeather.test.ts`: カスタムフックとデータ取得フローのテスト
 
 ### 4. Async Operations
 
@@ -203,7 +212,9 @@ end
 
 1.  **Ingestion (ETL)**: Cloud Run Job (`ingest_space_weather`) が NOAA からデータを取得し、**BigQuery** に蓄積 (毎時 0 分実行)。
 2.  **Sync (Data Mart)**: Cloud Run Job (`sync_bq_to_db`) が BigQuery から直近 7 日分のデータを集計・取得し、**Cloud SQL** の専用テーブルに洗い替え (毎時 5 分実行)。
+    - **Transaction**: データの不整合を防ぐため、`transaction.atomic` を用いて全削除・一括挿入（Bulk Create）を安全に行います。
 3.  **Serving**: Backend API は **Cloud SQL** を参照してデータを返却。これにより、BigQuery の起動オーバーヘッドを回避し、高速なレスポンスを実現。
+    - **Optimization**: 取得したデータに対し、Pandas を用いて Pivot 変換（Long -> Wide）や欠損値の補完（Forward Fill）を行い、Frontend が描画しやすい形式でレスポンスします。
 4.  **Visualization**: Frontend (Next.js + Recharts) でデータを可視化。
 
 ### Management Commands
