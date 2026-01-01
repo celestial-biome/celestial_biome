@@ -13,4 +13,5 @@ urlpatterns = [
     # APIのエンドポイントを追加
     path("api/hello/", hello_world),
     path("api/v1/astronomy/", include("astronomy.urls")),
+    path("api/v1/geology/", include("geology.urls")),
 ]

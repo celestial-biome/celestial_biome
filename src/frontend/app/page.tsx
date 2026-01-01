@@ -1,13 +1,5 @@
-import SolarSystemMap from './components/SolarSystemMap';
+import EarthquakeDashboard from './components/earthquake';
 import SpaceWeatherDashboard from './components/space-weather';
-
-// export default function Home() {
-//   return (
-//     <main className="flex min-h-screen flex-col items-center justify-center bg-black">
-//       <SolarSystemMap />
-//     </main>
-//   );
-// }
 
 export default function Home() {
   return (
@@ -21,6 +13,9 @@ export default function Home() {
       {/* 追加: 宇宙天気ダッシュボード */}
       <div className="w-full mt-10">
         <SpaceWeatherDashboard />
+      </div>
+      <div className="w-full relative z-10 py-8">
+        <EarthquakeDashboard />
       </div>
     </main>
   );
