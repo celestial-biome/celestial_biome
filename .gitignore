@@ -2,5 +2,6 @@ administrator/
 .vscode/
 Makefile
 src/backend/data/*.bsp
+src/backend/staticfiles
 src/backend/.env
 .env
