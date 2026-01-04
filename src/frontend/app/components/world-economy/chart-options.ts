@@ -13,7 +13,6 @@ const baseTooltip = {
 
 const baseGrid = { left: '3%', right: '120px', bottom: '5%', containLabel: true };
 
-// 型注釈をつけて 'vertical' をリテラル型として認識させる
 const baseLegend: EChartsOption['legend'] = {
   type: 'scroll',
   orient: 'vertical',
@@ -26,14 +25,15 @@ const baseLegend: EChartsOption['legend'] = {
 };
 
 // データシリーズに色と順序を適用するヘルパー
-const formatSeries = (series: SeriesData[]) => {
+// biome-ignore lint/suspicious/noExplicitAny: ECharts用オブジェクト(変換後)も受け取れるようにanyを許容
+const formatSeries = (series: any[]) => {
   // 定義順に並べ替え
   const sortedSeries = [...series].sort(
     (a, b) => COUNTRY_ORDER.indexOf(a.name) - COUNTRY_ORDER.indexOf(b.name),
   );
 
   return sortedSeries.map((s) => ({
-    ...s, // 重複エラー回避のため先に展開
+    ...s,
     itemStyle: { color: COUNTRY_COLORS[s.name] || '#ccc' },
     lineStyle: { width: 2 },
   }));
@@ -67,14 +67,13 @@ export const getStockOption = (series: SeriesData[]): EChartsOption => {
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: EChartsの型定義との不整合を回避
+      // biome-ignore lint/suspicious/noExplicitAny: ECharts型定義回避
       valueFormatter: (value: any) => (value as number)?.toFixed(1),
     },
     legend: baseLegend,
     grid: baseGrid,
     xAxis: {
       type: 'time',
-      // ★修正: boolean ではなく Array を指定 (始点・終点の余白なし)
       boundaryGap: ['0%', '0%'],
       axisLabel: { color: '#a1a1aa' },
       splitLine: { show: false },
@@ -107,14 +106,13 @@ export const getInflationOption = (series: SeriesData[]): EChartsOption => {
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: EChartsの型定義との不整合を回避
+      // biome-ignore lint/suspicious/noExplicitAny: ECharts型定義回避
       valueFormatter: (value: any) => `${(value as number)?.toFixed(2)}%`,
     },
     legend: baseLegend,
     grid: baseGrid,
     xAxis: {
       type: 'time',
-      // ★修正
       boundaryGap: ['0%', '0%'],
       axisLabel: { color: '#a1a1aa' },
       splitLine: { show: false },
@@ -146,14 +144,13 @@ export const getGdpOption = (series: SeriesData[]): EChartsOption => {
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: EChartsの型定義との不整合を回避
+      // biome-ignore lint/suspicious/noExplicitAny: ECharts型定義回避
       valueFormatter: (value: any) => `$${((value as number) / 1e9)?.toFixed(0)} B`,
     },
     legend: baseLegend,
     grid: baseGrid,
     xAxis: {
       type: 'time',
-      // ★修正
       boundaryGap: ['0%', '0%'],
       axisLabel: { color: '#a1a1aa' },
       splitLine: { show: false },
