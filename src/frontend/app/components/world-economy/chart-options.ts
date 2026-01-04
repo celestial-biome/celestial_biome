@@ -13,7 +13,7 @@ const baseTooltip = {
 
 const baseGrid = { left: '3%', right: '120px', bottom: '5%', containLabel: true };
 
-// ★修正: 型注釈をつけて 'vertical' をリテラル型として認識させる
+// 型注釈をつけて 'vertical' をリテラル型として認識させる
 const baseLegend: EChartsOption['legend'] = {
   type: 'scroll',
   orient: 'vertical',
@@ -74,7 +74,8 @@ export const getStockOption = (series: SeriesData[]): EChartsOption => {
     grid: baseGrid,
     xAxis: {
       type: 'time',
-      boundaryGap: false,
+      // ★修正: boolean ではなく Array を指定 (始点・終点の余白なし)
+      boundaryGap: ['0%', '0%'],
       axisLabel: { color: '#a1a1aa' },
       splitLine: { show: false },
     },
@@ -113,7 +114,8 @@ export const getInflationOption = (series: SeriesData[]): EChartsOption => {
     grid: baseGrid,
     xAxis: {
       type: 'time',
-      boundaryGap: false,
+      // ★修正
+      boundaryGap: ['0%', '0%'],
       axisLabel: { color: '#a1a1aa' },
       splitLine: { show: false },
     },
@@ -151,7 +153,8 @@ export const getGdpOption = (series: SeriesData[]): EChartsOption => {
     grid: baseGrid,
     xAxis: {
       type: 'time',
-      boundaryGap: false,
+      // ★修正
+      boundaryGap: ['0%', '0%'],
       axisLabel: { color: '#a1a1aa' },
       splitLine: { show: false },
     },
