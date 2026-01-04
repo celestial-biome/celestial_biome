@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "astronomy.apps.AstronomyConfig",
     "geology.apps.GeologyConfig",
+    "economy.apps.EconomyConfig",
 ]
 
 MIDDLEWARE = [

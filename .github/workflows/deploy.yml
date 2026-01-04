@@ -76,6 +76,18 @@ jobs:
             --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
             --region ${{ env.REGION }}
 
+      - name: Update Ingest Economy Job
+        run: |
+          gcloud run jobs update ingest-economy-job \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
+      - name: Update Sync Economy Job
+        run: |
+          gcloud run jobs update sync-economy-db-job \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
       # 5. Build & Push (Frontend)
       - name: Build and Push Frontend
         uses: docker/build-push-action@v5
