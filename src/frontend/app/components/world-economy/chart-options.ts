@@ -1,6 +1,6 @@
 import type { EChartsOption } from 'echarts';
 import type { SeriesData } from './utils';
-import { COUNTRY_COLORS, COUNTRY_ORDER } from './utils'; // 追加
+import { COUNTRY_COLORS, COUNTRY_ORDER } from './utils';
 
 // --- Helpers ---
 
@@ -11,17 +11,16 @@ const baseTooltip = {
   extraCssText: 'backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.5);',
 };
 
-// Streamlit風レイアウト: 凡例を右に出すため、右側に余白(padding)を設ける
 const baseGrid = { left: '3%', right: '120px', bottom: '5%', containLabel: true };
 const baseLegend = {
   type: 'scroll',
-  orient: 'vertical', // 縦並び
-  right: 0, // 右端
-  top: 'middle', // 中央揃え
+  orient: 'vertical',
+  right: 0,
+  top: 'middle',
   textStyle: { color: '#a1a1aa' },
   pageIconColor: '#fff',
   pageTextStyle: { color: '#fff' },
-  data: COUNTRY_ORDER, // 表示順序を固定
+  data: COUNTRY_ORDER,
 };
 
 // データシリーズに色と順序を適用するヘルパー
@@ -32,16 +31,14 @@ const formatSeries = (series: SeriesData[]) => {
   );
 
   return sortedSeries.map((s) => ({
-    name: s.name,
-    itemStyle: { color: COUNTRY_COLORS[s.name] || '#ccc' }, // カラー適用
+    ...s, // ★修正: 先に展開することで duplicate identifier エラーを回避
+    itemStyle: { color: COUNTRY_COLORS[s.name] || '#ccc' },
     lineStyle: { width: 2 },
-    ...s,
   }));
 };
 
 // --- 1. 株価パフォーマンス (正規化) ---
 export const getStockOption = (series: SeriesData[]): EChartsOption => {
-  // 正規化処理
   const normalizedSeries = series.map((s) => {
     let data = s.data;
     if (data.length > 0) {
@@ -70,7 +67,7 @@ export const getStockOption = (series: SeriesData[]): EChartsOption => {
       ...baseTooltip,
       valueFormatter: (value: number) => value.toFixed(1),
     },
-    legend: baseLegend, // 右側凡例
+    legend: baseLegend,
     grid: baseGrid,
     xAxis: {
       type: 'time',
@@ -85,7 +82,6 @@ export const getStockOption = (series: SeriesData[]): EChartsOption => {
       axisLabel: { color: '#a1a1aa' },
       splitLine: { lineStyle: { color: '#27272a' } },
     },
-    // 色と順序を適用
     series: formatSeries(normalizedSeries),
   };
 };
@@ -95,7 +91,7 @@ export const getInflationOption = (series: SeriesData[]): EChartsOption => {
   const formattedData = series.map((s) => ({
     name: s.name,
     type: 'line',
-    showSymbol: true, // ドットを表示
+    showSymbol: true,
     symbolSize: 6,
     smooth: true,
     data: s.data.map((d) => [d.date, d.value]),
