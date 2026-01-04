@@ -14,4 +14,5 @@ urlpatterns = [
     path("api/hello/", hello_world),
     path("api/v1/astronomy/", include("astronomy.urls")),
     path("api/v1/geology/", include("geology.urls")),
+    path("api/v1/economy/", include("economy.urls")),
 ]

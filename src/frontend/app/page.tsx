@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import EarthquakeDashboard from './components/earthquake';
 import SpaceWeatherDashboard from './components/space-weather';
+import WorldEconomyDashboard from './components/world-economy';
 
 export default function Home() {
   return (
@@ -31,6 +32,17 @@ export default function Home() {
         >
           {/* ここに実物のコンポーネントを配置 */}
           <EarthquakeDashboard />
+        </PreviewCard>
+
+        {/* 地震情報プレビューカード */}
+        <PreviewCard
+          href="/world-economy"
+          title="World Economy"
+          description="Global Economic Data"
+          colorClass="border-blue-500/30 hover:border-blue-400 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)]"
+        >
+          {/* ここに実物のコンポーネントを配置 */}
+          <WorldEconomyDashboard />
         </PreviewCard>
       </div>
     </main>

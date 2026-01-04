@@ -20,7 +20,9 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
     "skyfield>=1.53",
+    "wbgapi>=1.0.12",
     "whitenoise>=6.11.0",
+    "yfinance>=1.0",
 ]
 
 [dependency-groups]
@@ -35,7 +37,7 @@ dev = [
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.test_settings"
 python_files = ["test_*.py", "*_test.py"]
-testpaths = ["astronomy", "geology"]
+testpaths = ["astronomy", "geology", "economy"]
 addopts = "--nomigrations --reuse-db"
 
 [tool.ruff]
