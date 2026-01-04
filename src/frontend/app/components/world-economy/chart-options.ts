@@ -31,7 +31,7 @@ const formatSeries = (series: SeriesData[]) => {
   );
 
   return sortedSeries.map((s) => ({
-    ...s, // ★修正: 先に展開することで duplicate identifier エラーを回避
+    ...s, // 重複エラー回避のため先に展開
     itemStyle: { color: COUNTRY_COLORS[s.name] || '#ccc' },
     lineStyle: { width: 2 },
   }));
@@ -65,7 +65,8 @@ export const getStockOption = (series: SeriesData[]): EChartsOption => {
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
-      valueFormatter: (value: number) => value.toFixed(1),
+      // biome-ignore lint/suspicious/noExplicitAny: EChartsの型定義との不整合を回避
+      valueFormatter: (value: any) => (value as number)?.toFixed(1),
     },
     legend: baseLegend,
     grid: baseGrid,
@@ -103,7 +104,8 @@ export const getInflationOption = (series: SeriesData[]): EChartsOption => {
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
-      valueFormatter: (value: number) => `${value.toFixed(2)}%`,
+      // biome-ignore lint/suspicious/noExplicitAny: EChartsの型定義との不整合を回避
+      valueFormatter: (value: any) => `${(value as number)?.toFixed(2)}%`,
     },
     legend: baseLegend,
     grid: baseGrid,
@@ -140,7 +142,8 @@ export const getGdpOption = (series: SeriesData[]): EChartsOption => {
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
-      valueFormatter: (value: number) => `$${(value / 1e9).toFixed(0)} B`,
+      // biome-ignore lint/suspicious/noExplicitAny: EChartsの型定義との不整合を回避
+      valueFormatter: (value: any) => `$${((value as number) / 1e9)?.toFixed(0)} B`,
     },
     legend: baseLegend,
     grid: baseGrid,
