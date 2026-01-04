@@ -12,7 +12,9 @@ const baseTooltip = {
 };
 
 const baseGrid = { left: '3%', right: '120px', bottom: '5%', containLabel: true };
-const baseLegend = {
+
+// ★修正: 型注釈をつけて 'vertical' をリテラル型として認識させる
+const baseLegend: EChartsOption['legend'] = {
   type: 'scroll',
   orient: 'vertical',
   right: 0,
