@@ -1,36 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { EconomyApiResponse, SeriesData } from './utils';
 
-export function useWorldEconomy() {
-  const [data, setData] = useState<EconomyApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // データ取得
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        // APIエンドポイントの変更を反映
-        const res = await fetch(`${apiUrl}/api/v1/economy/world-economy/`);
-
-        if (!res.ok) throw new Error(`Failed to fetch data: ${res.statusText}`);
-
-        const jsonData = (await res.json()) as EconomyApiResponse;
-        setData(jsonData);
-      } catch (err) {
-        console.error(err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
+// 引数でデータを受け取る形に変更
+export function useWorldEconomy(data: EconomyApiResponse | null) {
   // チャート用データへの変換 (メモ化)
   const chartData = useMemo(() => {
+    // データがない場合のデフォルト値を返す
     if (!data) return { stockSeries: [], gdpSeries: [], inflationSeries: [] };
 
     const stockSeries: SeriesData[] = [];
@@ -57,8 +32,6 @@ export function useWorldEconomy() {
 
   return {
     data,
-    loading,
-    error,
     ...chartData,
   };
 }

@@ -6,7 +6,7 @@ import { useWorldEconomy } from './useWorldEconomy';
 import { type EconomyApiResponse, METRICS_INFO } from './utils';
 import { GdpChart, InflationChart, StockChart } from './WorldEconomyCharts';
 
-// --- Helper Component: Stat Card ---
+// --- Stat Card Component ---
 const StatCard = ({
   label,
   value,
@@ -27,20 +27,18 @@ const StatCard = ({
   </div>
 );
 
-// --- Helper Logic: Calculate Metrics ---
+// --- Metrics Logic ---
 const calculateMetrics = (data: EconomyApiResponse | null) => {
   if (!data) return null;
-
   const countries = Object.keys(data);
 
-  // 1. USA Stock (S&P 500) Latest
+  // 1. USA Stock
   const usaStock = data['USA']?.STOCK?.slice(-1)[0];
   const usaStockVal = usaStock ? usaStock.value.toFixed(2) : '-';
 
-  // 2. Top Performer (Stock Growth)
+  // 2. Top Performer
   let topPerfCountry = '-';
   let maxGrowth = -Infinity;
-
   countries.forEach((c) => {
     const stock = data[c]?.STOCK;
     if (stock && stock.length > 0) {
@@ -54,14 +52,12 @@ const calculateMetrics = (data: EconomyApiResponse | null) => {
     }
   });
 
-  // 3. Max Inflation (Latest)
+  // 3. Max Inflation
   let maxInfCountry = '-';
   let maxInfVal = -Infinity;
-
   countries.forEach((c) => {
     const inf = data[c]?.INFLATION;
     if (inf && inf.length > 0) {
-      // 直近のデータ(null除外済みの末尾)
       const last = inf[inf.length - 1].value;
       if (last > maxInfVal) {
         maxInfVal = last;
@@ -70,7 +66,7 @@ const calculateMetrics = (data: EconomyApiResponse | null) => {
     }
   });
 
-  // 4. Total GDP (Latest Sum)
+  // 4. Total GDP
   let totalGdp = 0;
   countries.forEach((c) => {
     const gdp = data[c]?.GDP;
@@ -85,27 +81,25 @@ const calculateMetrics = (data: EconomyApiResponse | null) => {
     maxGrowth: isFinite(maxGrowth) ? `+${maxGrowth.toFixed(1)}%` : '-',
     maxInfCountry,
     maxInfVal: isFinite(maxInfVal) ? `${maxInfVal.toFixed(2)}%` : '-',
-    totalGdp: (totalGdp / 1e12).toFixed(2) + 'T', // Trillion
+    totalGdp: (totalGdp / 1e12).toFixed(2) + 'T',
   };
 };
 
-export default function WorldEconomyDashboard() {
-  const { stockSeries, gdpSeries, inflationSeries, data, loading, error } = useWorldEconomy();
+// Propsの型定義を追加
+interface Props {
+  initialData: EconomyApiResponse | null;
+}
 
-  const metrics = useMemo(() => calculateMetrics(data), [data]);
+export default function WorldEconomyDashboard({ initialData }: Props) {
+  // フックに初期データを渡す
+  const { stockSeries, gdpSeries, inflationSeries } = useWorldEconomy(initialData);
+  const metrics = useMemo(() => calculateMetrics(initialData), [initialData]);
 
-  if (loading) {
-    return (
-      <div className="flex h-96 items-center justify-center text-zinc-500 animate-pulse">
-        Loading Global Economic Data...
-      </div>
-    );
-  }
-
-  if (error) {
+  // データが空の場合の表示
+  if (!initialData) {
     return (
       <div className="p-4 bg-red-900/20 text-red-400 rounded-md border border-red-900/50">
-        Error loading data: {error}
+        Data could not be retrieved.
       </div>
     );
   }
@@ -125,7 +119,6 @@ export default function WorldEconomyDashboard() {
           </div>
         </div>
 
-        {/* Key Metrics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
             label="🇺🇸 S&P 500 (Last Close)"
@@ -153,19 +146,16 @@ export default function WorldEconomyDashboard() {
         </div>
       </div>
 
-      {/* --- 2. Main Charts (1 Column Stack) --- */}
+      {/* --- 2. Main Charts --- */}
       <div className="flex flex-col gap-8">
-        {/* Stock Chart */}
         <Card title="Stock Market Performance" subtitle="Normalized (Start=100)">
           <StockChart data={stockSeries} className="h-[400px]" />
         </Card>
 
-        {/* GDP Chart */}
         <Card title="Real GDP Trend" subtitle="Constant 2015 US$ (Billions)">
           <GdpChart data={gdpSeries} className="h-[400px]" />
         </Card>
 
-        {/* Inflation Chart */}
         <Card title="Inflation Rate (CPI)" subtitle="Annual % Change">
           <InflationChart data={inflationSeries} className="h-[400px]" />
         </Card>

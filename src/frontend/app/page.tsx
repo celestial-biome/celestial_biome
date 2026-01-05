@@ -2,8 +2,34 @@ import Link from 'next/link';
 import EarthquakeDashboard from './components/earthquake';
 import SpaceWeatherDashboard from './components/space-weather';
 import WorldEconomyDashboard from './components/world-economy';
+// 型定義をインポート
+import type { EconomyApiResponse } from './components/world-economy/utils';
 
-export default function Home() {
+// トップページも1時間キャッシュ (必要に応じて調整)
+export const revalidate = 3600;
+
+// データ取得ロジック (world-economy/page.tsx と同様)
+async function getEconomyData(): Promise<EconomyApiResponse | null> {
+  const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL;
+
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/economy/world-economy/`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching economy data:', error);
+    return null;
+  }
+}
+
+// async function に変更してサーバーサイドでデータ待機可能にする
+export default async function Home() {
+  // データを取得
+  const economyData = await getEconomyData();
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-black text-white">
       <header className="mb-10 text-center z-10">
@@ -19,7 +45,6 @@ export default function Home() {
           description="Solar & Geomagnetic Activity"
           colorClass="border-yellow-500/30 hover:border-yellow-400 hover:shadow-[0_0_40px_rgba(234,179,8,0.2)]"
         >
-          {/* ここに実物のコンポーネントを配置 */}
           <SpaceWeatherDashboard />
         </PreviewCard>
 
@@ -30,19 +55,18 @@ export default function Home() {
           description="Global Seismic Data"
           colorClass="border-blue-500/30 hover:border-blue-400 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)]"
         >
-          {/* ここに実物のコンポーネントを配置 */}
           <EarthquakeDashboard />
         </PreviewCard>
 
-        {/* 地震情報プレビューカード */}
+        {/* 世界経済プレビューカード */}
         <PreviewCard
           href="/world-economy"
           title="World Economy"
           description="Global Economic Data"
           colorClass="border-blue-500/30 hover:border-blue-400 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)]"
         >
-          {/* ここに実物のコンポーネントを配置 */}
-          <WorldEconomyDashboard />
+          {/* 取得したデータを渡す */}
+          <WorldEconomyDashboard initialData={economyData} />
         </PreviewCard>
       </div>
     </main>
@@ -77,19 +101,16 @@ function PreviewCard({
         ${colorClass} border-b-0 border-x-0 rounded-t-2xl
       `}
       >
-        {/* 仮想的なスクリーンを作り、それをカードサイズに合わせて縮小します。
-          w-[285%]: 親要素の約3倍の幅を確保
-          scale-[0.35]: 確保した幅を約1/3に縮小して表示
-        */}
+        {/* 仮想的なスクリーンを作り、それをカードサイズに合わせて縮小します。 */}
         <div className="origin-top-left transform scale-[0.35] w-[285%] h-[285%] p-4 bg-gray-900/50">
           {children}
         </div>
       </div>
 
-      {/* グラデーションオーバーレイ（文字を読みやすくするため） */}
+      {/* グラデーションオーバーレイ */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none" />
 
-      {/* テキスト情報（カードの下部に配置） */}
+      {/* テキスト情報 */}
       <div
         className={`
         absolute bottom-0 left-0 right-0 p-6 border-t backdrop-blur-sm
