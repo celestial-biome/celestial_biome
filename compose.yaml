@@ -52,8 +52,6 @@ services:
     environment:
       # Docker内部ネットワークでのBackendアドレス
       - INTERNAL_API_URL=http://backend:8000
-      # クライアント(ブラウザ)から見たBackendアドレス
-      #- NEXT_PUBLIC_API_URL=http://localhost:8000
       # Windowsや一部のLinux/Mac環境で、ファイルの変更検知がうまく動かない場合の保険。
       # CPU負荷は少し上がりますが、ホットリロードが確実に動くようになります。
       - WATCHPACK_POLLING=true
