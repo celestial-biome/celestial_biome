@@ -4,19 +4,27 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import EconomicIndicator
+from .serializers import EconomicIndicatorSerializer
 
 
 class EconomyDashboardView(APIView):
     def get(self, request):
-        # 全データを一括取得してPython側で整形（データ量によるが、今回はシンプル化）
-        data = EconomicIndicator.objects.all().order_by("date")
+        # 1. データを取得
+        queryset = EconomicIndicator.objects.all().order_by("date")
 
-        # 構造: { 'USA': { 'STOCK': [{date, value}, ...], 'GDP': ... } }
+        # 2. シリアライザでデータを検証・整形（ここでModelオブジェクト -> 辞書リストに変換）
+        serializer = EconomicIndicatorSerializer(queryset, many=True)
+        serialized_data = serializer.data
+
+        # 3. フロントエンドが期待する構造（国 > 指標 > 配列）に再構築
+        # 構造: { 'USA': { 'STOCK': [{date, value}, ...], ... } }
         response_data = defaultdict(lambda: defaultdict(list))
 
-        for item in data:
-            response_data[item.country_iso3][item.indicator_type].append(
-                {"date": item.date.strftime("%Y-%m-%d"), "value": item.value}
-            )
+        for item in serialized_data:
+            country = item["country_iso3"]
+            ind_type = item["indicator_type"]
+
+            # 必要なデータだけを抽出してリストに追加
+            response_data[country][ind_type].append({"date": item["date"], "value": item["value"]})
 
         return Response(response_data)
