@@ -5,11 +5,16 @@ import { useEffect, useState } from 'react';
 import { BzChart, KpChart, WindChart, XrayChart } from './SpaceWeatherCharts';
 import { Card, StatChip } from './ui-parts';
 import { useSpaceWeather } from './useSpaceWeather';
-import { cn, formatTs, formatTsShort, METRICS_INFO } from './utils';
+import { cn, formatTs, formatTsShort, METRICS_INFO, type WeatherData } from './utils';
 
-export default function SpaceWeatherDashboard() {
-  const { data, loading, nowMs, seriesData, lastXray, lastWind, lastBz, lastKp, flare } =
-    useSpaceWeather();
+interface Props {
+  initialData: WeatherData[] | null;
+}
+
+export default function SpaceWeatherDashboard({ initialData }: Props) {
+  // フックに初期データを渡す
+  const { data, nowMs, seriesData, lastXray, lastWind, lastBz, lastKp, flare } =
+    useSpaceWeather(initialData);
 
   const [readyCount, setReadyCount] = useState(0);
 
@@ -28,8 +33,19 @@ export default function SpaceWeatherDashboard() {
     setReadyCount((c) => Math.min(4, c + 1));
   };
 
-  if (loading) return <div className="text-white p-4">Loading Space Weather Data...</div>;
-  if (!data.length) return <div className="text-white p-4">No data available.</div>;
+  // 1. データ取得失敗時の表示
+  if (!initialData) {
+    return (
+      <div className="p-4 bg-red-900/20 text-red-400 rounded-md border border-red-900/50">
+        Data could not be retrieved.
+      </div>
+    );
+  }
+
+  // 2. データが空の場合の表示
+  if (!data.length) {
+    return <div className="text-white p-4">No data available.</div>;
+  }
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4 md:space-y-6">
@@ -45,10 +61,11 @@ export default function SpaceWeatherDashboard() {
 
           <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:gap-2">
             <div className="rounded-lg md:rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 md:px-3 md:py-2 text-[10px] md:text-xs text-zinc-300 tabular-nums text-center">
-              UTC {formatTs(nowMs, 'UTC').split(' ')[1]}
+              {/* nowMs が null の場合はプレースホルダーを表示 */}
+              UTC {nowMs ? formatTs(nowMs, 'UTC').split(' ')[1] : '--:--:--'}
             </div>
             <div className="rounded-lg md:rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 md:px-3 md:py-2 text-[10px] md:text-xs text-zinc-300 tabular-nums text-center">
-              JST {formatTs(nowMs, 'Asia/Tokyo').split(' ')[1]}
+              JST {nowMs ? formatTs(nowMs, 'Asia/Tokyo').split(' ')[1] : '--:--:--'}
             </div>
             <div
               className={cn(
