@@ -6,7 +6,9 @@ from django.utils import timezone
 from rest_framework.test import APIRequestFactory
 
 from astronomy.models import SpaceWeatherLog
-from astronomy.views import space_weather_list
+
+# 修正: 関数ベースビューではなくクラスベースビューをインポート
+from astronomy.views import SpaceWeatherListView
 
 
 @pytest.mark.django_db
@@ -15,9 +17,12 @@ def test_space_weather_list_empty():
     factory = APIRequestFactory()
     request = factory.get("/astronomy/api/space-weather/")
 
-    response = space_weather_list(request)
+    # 修正: クラスベースビューとして呼び出し
+    view = SpaceWeatherListView.as_view()
+    response = view(request)
 
     assert response.status_code == 200
+    # DRFのResponseオブジェクトは .content アクセス時にレンダリングされます
     data = json.loads(response.content)
     assert data == []
 
@@ -45,7 +50,10 @@ def test_space_weather_list_pivot_and_fill():
     # API実行
     factory = APIRequestFactory()
     request = factory.get("/astronomy/api/space-weather/")
-    response = space_weather_list(request)
+
+    # 修正: クラスベースビューとして呼び出し
+    view = SpaceWeatherListView.as_view()
+    response = view(request)
 
     assert response.status_code == 200
     data = json.loads(response.content)
@@ -55,6 +63,7 @@ def test_space_weather_list_pivot_and_fill():
 
     # --- T1 の検証 ---
     # timestampはISO形式文字列になっているため一致検索
+    # シリアライザ経由でも ISO 形式で出力されるため、このロジックは維持可能
     row1 = next(d for d in data if d["timestamp"] == t1.isoformat())
     assert row1["solar_wind_speed"] == 400.0
     assert row1["kp_index"] == 3.0
