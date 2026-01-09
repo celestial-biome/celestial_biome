@@ -1,19 +1,22 @@
 import Link from 'next/link';
 import EarthquakeDashboard from './components/earthquake';
 import SpaceWeatherDashboard from './components/space-weather';
-import WorldEconomyDashboard from './components/world-economy';
 // 型定義をインポート
+import type { WeatherData } from './components/space-weather/utils';
+import WorldEconomyDashboard from './components/world-economy';
 import type { EconomyApiResponse } from './components/world-economy/utils';
 
 // トップページも1時間キャッシュ (必要に応じて調整)
 export const revalidate = 3600;
 
-// データ取得ロジック (world-economy/page.tsx と同様)
-async function getEconomyData(): Promise<EconomyApiResponse | null> {
-  const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL;
+// API URLの取得 (共通ロジック)
+const getApiUrl = () =>
+  process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+// 1. World Economy データ取得ロジック
+async function getEconomyData(): Promise<EconomyApiResponse | null> {
   try {
-    const res = await fetch(`${apiUrl}/api/v1/economy/world-economy/`, {
+    const res = await fetch(`${getApiUrl()}/api/v1/economy/world-economy/`, {
       next: { revalidate: 3600 },
     });
 
@@ -25,10 +28,28 @@ async function getEconomyData(): Promise<EconomyApiResponse | null> {
   }
 }
 
+// 2. Space Weather データ取得ロジック (追加)
+async function getSpaceWeatherData(): Promise<WeatherData[] | null> {
+  try {
+    const res = await fetch(`${getApiUrl()}/api/v1/astronomy/space-weather/`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching space weather data:', error);
+    return null;
+  }
+}
+
 // async function に変更してサーバーサイドでデータ待機可能にする
 export default async function Home() {
-  // データを取得
-  const economyData = await getEconomyData();
+  // 並列でデータを取得して待機
+  const [economyData, spaceWeatherData] = await Promise.all([
+    getEconomyData(),
+    getSpaceWeatherData(),
+  ]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-black text-white">
@@ -45,7 +66,8 @@ export default async function Home() {
           description="Solar & Geomagnetic Activity"
           colorClass="border-yellow-500/30 hover:border-yellow-400 hover:shadow-[0_0_40px_rgba(234,179,8,0.2)]"
         >
-          <SpaceWeatherDashboard />
+          {/* 取得したデータを渡す */}
+          <SpaceWeatherDashboard initialData={spaceWeatherData} />
         </PreviewCard>
 
         {/* 地震情報プレビューカード */}
@@ -55,6 +77,7 @@ export default async function Home() {
           description="Global Seismic Data"
           colorClass="border-blue-500/30 hover:border-blue-400 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)]"
         >
+          {/* 地震データも同様に改修する場合はここに props を渡します */}
           <EarthquakeDashboard />
         </PreviewCard>
 

@@ -1,37 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
 import { findLastFinite, flareClass, type WeatherData, type XY } from './utils';
 
-export function useSpaceWeather() {
-  const [data, setData] = useState<WeatherData[]>([]);
-  const [loading, setLoading] = useState(true);
+// 引数でデータを受け取る形に変更
+export function useSpaceWeather(initialData: WeatherData[] | null) {
+  // サーバーから渡されたデータを使用 (データがない場合は空配列)
+  const data = initialData || [];
 
   // 現在時刻更新
-  const [nowMs, setNowMs] = useState(() => Date.now());
+  // Hydration Error回避のため、サーバーと不一致になる初期値(Date.now())は避け、nullで初期化
+  const [nowMs, setNowMs] = useState<number | null>(null);
+
   useEffect(() => {
+    // クライアントマウント直後に時刻をセット
+    setNowMs(Date.now());
     const id = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
 
-  // データ取得
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${apiUrl}/api/v1/astronomy/space-weather/`);
-        if (!res.ok) throw new Error('Failed to fetch data');
-        const jsonData = (await res.json()) as WeatherData[];
-        setData(jsonData);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
   // チャート用データ整形
   const seriesData = useMemo(() => {
+    // データがない場合は空の結果を返す
+    if (!data.length) {
+      return { xray: [], wind: [], bz: [], kp: [] };
+    }
+
     const toPoint = (ts: string, v: number | undefined) => {
       const t = new Date(ts).getTime();
       return [t, v ?? null] as XY;
@@ -53,7 +45,8 @@ export function useSpaceWeather() {
 
   return {
     data,
-    loading,
+    // データ取得状況のフラグ (nullなら取得失敗とみなす)
+    hasData: !!initialData,
     nowMs,
     seriesData,
     lastXray,
