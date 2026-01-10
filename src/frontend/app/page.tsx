@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import EarthquakeDashboard from './components/earthquake';
+import type { Earthquake } from './components/earthquake/utils';
 import SpaceWeatherDashboard from './components/space-weather';
-// 型定義をインポート
 import type { WeatherData } from './components/space-weather/utils';
 import WorldEconomyDashboard from './components/world-economy';
 import type { EconomyApiResponse } from './components/world-economy/utils';
@@ -28,7 +28,7 @@ async function getEconomyData(): Promise<EconomyApiResponse | null> {
   }
 }
 
-// 2. Space Weather データ取得ロジック (追加)
+// 2. Space Weather データ取得ロジック
 async function getSpaceWeatherData(): Promise<WeatherData[] | null> {
   try {
     const res = await fetch(`${getApiUrl()}/api/v1/astronomy/space-weather/`, {
@@ -43,12 +43,28 @@ async function getSpaceWeatherData(): Promise<WeatherData[] | null> {
   }
 }
 
+// 3. Earthquake データ取得ロジック
+async function getEarthquakeData(): Promise<Earthquake[] | null> {
+  try {
+    const res = await fetch(`${getApiUrl()}/api/v1/geology/earthquakes/`, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!res.ok) return null;
+    return res.json();
+  } catch (error) {
+    console.error('Error fetching earthquake data:', error);
+    return null;
+  }
+}
+
 // async function に変更してサーバーサイドでデータ待機可能にする
 export default async function Home() {
   // 並列でデータを取得して待機
-  const [economyData, spaceWeatherData] = await Promise.all([
+  const [economyData, spaceWeatherData, earthquakeData] = await Promise.all([
     getEconomyData(),
     getSpaceWeatherData(),
+    getEarthquakeData(),
   ]);
 
   return (
@@ -77,8 +93,8 @@ export default async function Home() {
           description="Global Seismic Data"
           colorClass="border-blue-500/30 hover:border-blue-400 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)]"
         >
-          {/* 地震データも同様に改修する場合はここに props を渡します */}
-          <EarthquakeDashboard />
+          {/* 取得したデータを渡す */}
+          <EarthquakeDashboard initialData={earthquakeData} />
         </PreviewCard>
 
         {/* 世界経済プレビューカード */}

@@ -1,143 +1,90 @@
-import { renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderHook } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { useEarthquakes } from '../useEarthquakes';
+import type { Earthquake } from '../utils';
 
-// fetchのグローバルモック
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
-
-const mockApiData = [
+// テスト用モックデータ
+const mockEarthquakes: Earthquake[] = [
   {
-    usgs_id: '1',
-    timestamp: '2025-01-01T10:00:00.000Z', // 1/1
-    magnitude: 6.0,
-    place: 'Near Coast, Japan',
+    usgs_id: 'us1001',
+    place: '10km SSE of Tokyo, Japan',
+    magnitude: 5.5,
+    timestamp: '2025-01-01T10:00:00Z',
+    depth: 35,
+    latitude: 35.6,
+    longitude: 139.6,
+    url: 'http://example.com/1',
+  },
+  {
+    usgs_id: 'us1002',
+    place: '20km E of Taipei, Taiwan',
+    magnitude: 6.2, // これが最大
+    timestamp: '2025-01-01T12:00:00Z',
     depth: 10,
-    latitude: 35,
-    longitude: 139,
+    latitude: 25.0,
+    longitude: 121.5,
+    url: 'http://example.com/2',
   },
   {
-    usgs_id: '2',
-    timestamp: '2025-01-01T20:00:00.000Z', // 1/1 (同日)
-    magnitude: 5.0,
-    place: 'Tokyo, Japan',
-    depth: 20,
-    latitude: 36,
-    longitude: 140,
-  },
-  {
-    usgs_id: '3',
-    timestamp: '2025-01-02T10:00:00.000Z', // 1/2 (別日)
-    magnitude: 7.0,
-    place: 'California, USA',
-    depth: 5,
-    latitude: 34,
-    longitude: -118,
+    usgs_id: 'us1003',
+    // 修正: カンマを追加して "Japan" として集計されるように変更
+    place: 'Near Coast, Japan',
+    magnitude: 4.0,
+    timestamp: '2025-01-02T09:00:00Z',
+    depth: 50,
+    latitude: 36.0,
+    longitude: 140.0,
+    url: 'http://example.com/3',
   },
 ];
 
 describe('useEarthquakes Hook', () => {
-  beforeEach(() => {
-    mockFetch.mockClear();
-  });
+  it('初期データがnullの場合、空の状態を返すこと', () => {
+    const { result } = renderHook(() => useEarthquakes(null));
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('should fetch data and set loading state', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockApiData,
-    });
-
-    const { result } = renderHook(() => useEarthquakes());
-
-    // 初期状態
-    expect(result.current.loading).toBe(true);
     expect(result.current.data).toEqual([]);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.topQuakes).toEqual([]);
+    expect(result.current.regionRanking).toEqual([]);
+    expect(result.current.timeSeriesData.dates).toEqual([]);
+  });
 
-    // データ取得後
-    await waitFor(() => expect(result.current.loading).toBe(false));
+  it('データが渡された場合、正しく加工して値を返すこと', () => {
+    const { result } = renderHook(() => useEarthquakes(mockEarthquakes));
 
+    // データがそのままセットされているか
     expect(result.current.data).toHaveLength(3);
-    expect(result.current.data).toEqual(mockApiData);
-  });
+    expect(result.current.loading).toBe(false);
 
-  it('should calculate top 5 quakes sorted by magnitude', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockApiData,
-    });
-
-    const { result } = renderHook(() => useEarthquakes());
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    // M7.0 -> M6.0 -> M5.0 の順になるはず
+    // 1. Top 5 (マグニチュード順) の検証
     const top = result.current.topQuakes;
-    expect(top[0].magnitude).toBe(7.0);
-    expect(top[1].magnitude).toBe(6.0);
-    expect(top[2].magnitude).toBe(5.0);
-  });
+    expect(top).toHaveLength(3);
+    expect(top[0].usgs_id).toBe('us1002'); // M6.2が先頭
+    expect(top[0].magnitude).toBe(6.2);
+    expect(top[2].magnitude).toBe(4.0);
 
-  it('should generate timeSeriesData correctly', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockApiData,
-    });
-
-    const { result } = renderHook(() => useEarthquakes());
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    const { dates, series } = result.current.timeSeriesData;
-
-    // 日付がソートされているか
-    // ローカル時間依存があるため、日付の文字列は環境によるが、2日分あることを確認
-    expect(dates).toHaveLength(2);
-
-    // 地域ごとのシリーズ
-    // "Japan" と "USA" (placeのカンマ区切り末尾)
-    expect(series.map((s) => s.name)).toEqual(expect.arrayContaining(['Japan', 'USA']));
-
-    const japanSeries = series.find((s) => s.name === 'Japan');
-    const usaSeries = series.find((s) => s.name === 'USA');
-
-    // Japan: 1/1に2回, 1/2に0回 (あるいは日付順序による)
-    // USA: 1/1に0回, 1/2に1回
-    // 合計数でチェック
-    const totalJapan = japanSeries?.data.reduce((a, b) => a + b, 0);
-    const totalUsa = usaSeries?.data.reduce((a, b) => a + b, 0);
-
-    expect(totalJapan).toBe(2);
-    expect(totalUsa).toBe(1);
-  });
-
-  it('should generate regionRanking correctly', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockApiData,
-    });
-
-    const { result } = renderHook(() => useEarthquakes());
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
+    // 2. 地域別ランキング (Region Ranking) の検証
+    // 地域名はカンマ区切りの最後 ("Japan", "Taiwan", "Japan") -> Japan: 2, Taiwan: 1
     const ranking = result.current.regionRanking;
-    // Japan: 2, USA: 1
-    expect(ranking).toEqual([
-      ['Japan', 2],
-      ['USA', 1],
-    ]);
-  });
 
-  it('should handle fetch error gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockFetch.mockRejectedValueOnce(new Error('API Error'));
+    // 修正により Japan が2つ分カウントされ、要素数は2になるはず
+    expect(ranking).toHaveLength(2);
 
-    const { result } = renderHook(() => useEarthquakes());
+    // Japanが2回出現しているのでランキング1位
+    expect(ranking[0]).toEqual(['Japan', 2]);
+    expect(ranking[1]).toEqual(['Taiwan', 1]);
 
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    // 3. 時系列データ (Time Series) の検証
+    const tsData = result.current.timeSeriesData;
+    // 日付は 1/1 と 1/2 の2つ
+    expect(tsData.dates).toHaveLength(2);
+    // Seriesには Japan と Taiwan があるはず
+    expect(tsData.series).toHaveLength(2);
 
-    expect(result.current.data).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalled();
+    // データの中身を簡易チェック (Japanのデータ)
+    const japanSeries = tsData.series.find((s) => s.name === 'Japan');
+    expect(japanSeries).toBeDefined();
+    // 1/1に1回, 1/2に1回 (合計2)
+    expect(japanSeries?.data.reduce((a, b) => a + b, 0)).toBe(2);
   });
 });

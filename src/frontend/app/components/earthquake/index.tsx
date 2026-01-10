@@ -1,6 +1,5 @@
 'use client';
 
-// space-weather の UI パーツを再利用
 import { Card, StatChip } from '../space-weather/ui-parts';
 import {
   DepthScatterChart,
@@ -10,14 +9,41 @@ import {
   TimeSeriesChart,
 } from './EarthquakeCharts';
 import { useEarthquakes } from './useEarthquakes';
-// ★ 追加: METRICS_INFO をインポート
-import { METRICS_INFO } from './utils';
+import { type Earthquake, METRICS_INFO } from './utils';
 
-export default function EarthquakeDashboard() {
-  const { data, loading, topQuakes, timeSeriesData, regionRanking } = useEarthquakes();
+interface Props {
+  initialData: Earthquake[] | null;
+}
 
-  if (loading)
-    return <div className="text-white p-6 animate-pulse">Loading Global Seismic Data...</div>;
+// ハイドレーションエラー回避のための安定した日付フォーマッター
+// サーバー/クライアント間でタイムゾーンやロケールの違いが出ないよう、UTCベースまたは固定ロジックで整形します
+const formatDateSafe = (ts: string) => {
+  const d = new Date(ts);
+  // シンプルに UTC の YYYY/MM/DD を返す (または必要に応じてJST加算などを行う)
+  // ここでは不整合を防ぐため UTC の日付を使用します
+  const year = d.getUTCFullYear();
+  const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+  const day = d.getUTCDate().toString().padStart(2, '0');
+  return `${year}/${month}/${day}`;
+};
+
+export default function EarthquakeDashboard({ initialData }: Props) {
+  // フックにサーバー側で取得したデータを渡す
+  const { data, loading, topQuakes, timeSeriesData, regionRanking } = useEarthquakes(initialData);
+
+  // データ取得失敗時の表示
+  if (!initialData) {
+    return (
+      <div className="p-4 bg-red-900/20 text-red-400 rounded-md border border-red-900/50">
+        Data could not be retrieved.
+      </div>
+    );
+  }
+
+  // データが空の場合
+  if (!data.length && !loading) {
+    return <div className="text-white p-4">No earthquake data available.</div>;
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 p-4">
@@ -42,7 +68,8 @@ export default function EarthquakeDashboard() {
         {topQuakes.map((q) => (
           <StatChip
             key={q.usgs_id}
-            label={new Date(q.timestamp).toLocaleDateString()}
+            // 修正: toLocaleDateString() をやめて、自作の安全なフォーマッターを使用
+            label={formatDateSafe(q.timestamp)}
             value={`M${q.magnitude.toFixed(1)}`}
             sub={q.place.split(',').pop()?.trim()}
             tone={q.magnitude >= 6 ? 'text-red-400' : 'text-orange-300'}
@@ -86,7 +113,7 @@ export default function EarthquakeDashboard() {
         </div>
       </div>
 
-      {/* --- ★ 追加: Metrics Reference Section --- */}
+      {/* --- Metrics Reference Section --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 p-4 bg-gray-900/80 rounded-2xl border border-white/10">
         <h3 className="text-base md:text-lg font-bold text-white col-span-full mb-1">
           Metrics Reference
