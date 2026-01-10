@@ -16,6 +16,7 @@ const getMarker = (color: string) =>
 
 // --- 1. 世界震源マップ ---
 export const getMapOption = (data: Earthquake[]): EChartsOption => ({
+  animation: false, // ★ ここに追加（アニメーション無効化）
   backgroundColor: 'transparent',
   tooltip: {
     ...baseTooltip,
@@ -81,6 +82,7 @@ export const getMagHistOption = (data: Earthquake[]): EChartsOption => {
   }
 
   return {
+    animation: false, // ★ ここに追加
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
@@ -110,6 +112,7 @@ export const getMagHistOption = (data: Earthquake[]): EChartsOption => {
 
 // --- 3. 深さ vs マグニチュード (日時追加 & スライダー非表示) ---
 export const getDepthScatterOption = (data: Earthquake[]): EChartsOption => ({
+  animation: false, // ★ ここに追加
   tooltip: {
     ...baseTooltip,
     formatter: (p: any) => {
@@ -180,6 +183,7 @@ export const getDepthScatterOption = (data: Earthquake[]): EChartsOption => ({
 
 // --- 4. 地域別ランキング ---
 export const getRegionRankOption = (rankingData: [string, number][]): EChartsOption => ({
+  animation: false, // ★ ここに追加
   tooltip: {
     trigger: 'axis',
     ...baseTooltip,
@@ -223,6 +227,7 @@ export const getRegionRankOption = (rankingData: [string, number][]): EChartsOpt
 
 // --- 5. 時系列推移 (ハイライト付き積み上げ棒グラフ) ---
 export const getTimeSeriesOption = (stackedData: StackedSeriesData): EChartsOption => ({
+  animation: false, // ★ ここに追加
   tooltip: {
     trigger: 'item', // ピンポイント表示
     ...baseTooltip,

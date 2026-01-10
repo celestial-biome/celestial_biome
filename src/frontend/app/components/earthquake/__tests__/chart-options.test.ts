@@ -33,6 +33,11 @@ const mockData: Earthquake[] = [
 
 describe('earthquake/chart-options', () => {
   describe('getMapOption', () => {
+    it('should have animation disabled', () => {
+      const option = getMapOption(mockData);
+      expect(option.animation).toBe(false);
+    });
+
     it('should generate correct scatter data', () => {
       const option = getMapOption(mockData);
       const series: any = option.series?.[0];
@@ -57,6 +62,11 @@ describe('earthquake/chart-options', () => {
   });
 
   describe('getMagHistOption', () => {
+    it('should have animation disabled', () => {
+      const option = getMagHistOption(mockData);
+      expect(option.animation).toBe(false);
+    });
+
     it('should bucket magnitudes correctly', () => {
       const option = getMagHistOption(mockData);
       const series: any = option.series?.[0];
@@ -70,6 +80,11 @@ describe('earthquake/chart-options', () => {
   });
 
   describe('getDepthScatterOption', () => {
+    it('should have animation disabled', () => {
+      const option = getDepthScatterOption(mockData);
+      expect(option.animation).toBe(false);
+    });
+
     it('should map depth and magnitude correctly', () => {
       const option = getDepthScatterOption(mockData);
       const series: any = option.series?.[0];
@@ -81,6 +96,15 @@ describe('earthquake/chart-options', () => {
   });
 
   describe('getRegionRankOption', () => {
+    it('should have animation disabled', () => {
+      const rankingData: [string, number][] = [
+        ['Japan', 10],
+        ['USA', 5],
+      ];
+      const option = getRegionRankOption(rankingData);
+      expect(option.animation).toBe(false);
+    });
+
     it('should display ranking data', () => {
       const rankingData: [string, number][] = [
         ['Japan', 10],
@@ -99,6 +123,12 @@ describe('earthquake/chart-options', () => {
   });
 
   describe('getTimeSeriesOption', () => {
+    it('should have animation disabled', () => {
+      const stackedData: StackedSeriesData = { dates: [], series: [] };
+      const option = getTimeSeriesOption(stackedData);
+      expect(option.animation).toBe(false);
+    });
+
     it('should pass through stacked series data', () => {
       const stackedData: StackedSeriesData = {
         dates: ['1/1', '1/2'],
