@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { Earthquake } from './utils';
 
 // グラフ用にデータを構造化する型
@@ -10,33 +10,20 @@ export type StackedSeriesData = {
     stack: 'total';
     emphasis: {
       focus: 'series';
-      blurScope: 'coordinateSystem'; // 重要: 他の要素をぼかす
+      blurScope: 'coordinateSystem';
     };
     data: number[];
   }[];
 };
 
-export function useEarthquakes() {
-  const [data, setData] = useState<Earthquake[]>([]);
-  const [loading, setLoading] = useState(true);
+// 引数でデータを受け取る
+export function useEarthquakes(initialData: Earthquake[] | null) {
+  // サーバーからデータが渡されなかった場合は空配列
+  const data = initialData || [];
 
-  // データ取得
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${apiUrl}/api/v1/geology/earthquakes/`);
-        if (!res.ok) throw new Error(`Failed: ${res.statusText}`);
-        const jsonData = (await res.json()) as Earthquake[];
-        setData(jsonData);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  // サーバー側で取得済みなのでローディングは完了扱いとする
+  // (必要であれば null チェックで分岐も可能)
+  const loading = false;
 
   // 1. Top 5 (マグニチュード順)
   const topQuakes = useMemo(() => {
@@ -47,7 +34,6 @@ export function useEarthquakes() {
   const timeSeriesData = useMemo((): StackedSeriesData => {
     if (data.length === 0) return { dates: [], series: [] };
 
-    // 日付と地域のセットアップ
     const dateSet = new Set<string>();
     const regionSet = new Set<string>();
     const counts: Record<string, Record<string, number>> = {};
@@ -66,13 +52,11 @@ export function useEarthquakes() {
       counts[dateKey][region] = (counts[dateKey][region] || 0) + 1;
     }
 
-    // ソート
     const sortedDates = Array.from(dateSet).sort(
       (a, b) => new Date(a).getTime() - new Date(b).getTime(),
     );
     const sortedRegions = Array.from(regionSet).sort();
 
-    // ECharts Series 形式に変換
     const series = sortedRegions.map((region) => {
       const regionData = sortedDates.map((date) => {
         return counts[date]?.[region] || 0;
@@ -82,7 +66,6 @@ export function useEarthquakes() {
         name: region,
         type: 'bar' as const,
         stack: 'total' as const,
-        // ★ ハイライト効果の設定
         emphasis: {
           focus: 'series' as const,
           blurScope: 'coordinateSystem' as const,
