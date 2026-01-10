@@ -69,3 +69,53 @@ def test_space_weather_list_pivot_and_fill():
     row2 = next(d for d in data if d["timestamp"] == t2_str)
     assert row2["solar_wind_speed"] == 500.0
     assert row2["kp_index"] == 3.0
+
+
+@pytest.mark.django_db
+def test_space_weather_list_filter_days():
+    """
+    daysパラメータによる期間フィルタリングのテスト
+    """
+    now = timezone.now()
+
+    # 1. データ作成
+    # 3日前（デフォルト7日に含まれる）
+    t_recent = now - timedelta(days=3)
+    SpaceWeatherLog.objects.create(timestamp=t_recent, metric="solar_wind_speed", value=300.0)
+
+    # 10日前（デフォルト7日に含まれない）
+    t_old = now - timedelta(days=10)
+    SpaceWeatherLog.objects.create(timestamp=t_old, metric="solar_wind_speed", value=300.0)
+
+    factory = APIRequestFactory()
+    view = SpaceWeatherListView.as_view()
+
+    # --- ケースA: パラメータなし（デフォルト7日） ---
+    # 期待値: 3日前のデータのみ取得できる
+    request = factory.get("/astronomy/api/space-weather/")
+    response = view(request)
+    response.render()  # ★ここを追加
+    data = json.loads(response.content)
+
+    assert len(data) == 1
+    # 日付文字列の比較（"Z"対応）
+    expected_ts = t_recent.isoformat().replace("+00:00", "Z")
+    assert data[0]["timestamp"] == expected_ts
+
+    # --- ケースB: days=30 を指定 ---
+    # 期待値: 10日前のデータも含まれて、合計2件取得できる
+    request_long = factory.get("/astronomy/api/space-weather/", {"days": 30})
+    response_long = view(request_long)
+    response_long.render()  # ★ここを追加
+    data_long = json.loads(response_long.content)
+
+    assert len(data_long) == 2
+
+    # --- ケースC: days=1 を指定 ---
+    # 期待値: 3日前のデータも範囲外になり、0件になる
+    request_short = factory.get("/astronomy/api/space-weather/", {"days": 1})
+    response_short = view(request_short)
+    response_short.render()  # ★ここを追加
+    data_short = json.loads(response_short.content)
+
+    assert len(data_short) == 0

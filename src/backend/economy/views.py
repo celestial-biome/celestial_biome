@@ -8,6 +8,10 @@ from .serializers import EconomicIndicatorSerializer
 
 
 class EconomyDashboardView(APIView):
+    """
+    2020年から世界経済のデータを取得し、フロントエンド用に整形して返すAPI
+    """
+
     def get(self, request):
         # 1. データを取得
         queryset = EconomicIndicator.objects.all().order_by("date")
