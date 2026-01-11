@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-# swagger用のユーティリティ
+# OpenApiParameter を追加インポート
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.response import Response
@@ -22,7 +22,7 @@ class SpaceWeatherListView(APIView):
     @extend_schema(
         summary="宇宙天気データの時系列取得",
         description="指定した期間（daysパラメータ）のデータを取得し、タイムスタンプごとのオブジェクトに整形して返します。",
-        # Parameters の設定
+        # ▼ ここに Parameters の設定を追加しました ▼
         parameters=[
             OpenApiParameter(
                 name="days",
@@ -38,7 +38,7 @@ class SpaceWeatherListView(APIView):
                 description="整形された宇宙天気データのリスト",
                 # 実際に返却される辞書の構造をここで定義します
                 response=inline_serializer(
-                    name="SpaceWeatherResponse",
+                    name="SpaceWeather",
                     many=True,  # リスト形式で返ることを指定
                     fields={
                         "timestamp": serializers.DateTimeField(),
