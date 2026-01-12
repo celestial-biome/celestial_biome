@@ -41,4 +41,4 @@ class EconomicIndicator(models.Model):
         管理画面などでオブジェクトを表示する際の文字列表現
         例: Japan - GDP (Constant 2015 US$) (2024-01-01)
         """
-        return f"{self.get_country_iso3_display()} - {self.get_indicator_type_display()} ({self.date})"
+        return f"{self.get_country_iso3_display()} - {self.get_indicator_type_display()} ({self.date})"  # type: ignore

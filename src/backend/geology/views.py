@@ -47,7 +47,7 @@ class EarthquakeListView(generics.ListAPIView):
         queryset = Earthquake.objects.all().order_by("-timestamp")
 
         # 1. days パラメータの処理 (Astronomy と同様のロジック)
-        days_param = self.request.query_params.get("days", 7)
+        days_param = self.request.GET.get("days", 7)
         try:
             days = int(days_param)
         except ValueError:
@@ -57,7 +57,7 @@ class EarthquakeListView(generics.ListAPIView):
         queryset = queryset.filter(timestamp__gte=threshold)
 
         # 2. min_magnitude パラメータの処理 (追加機能)
-        min_mag = self.request.query_params.get("min_magnitude")
+        min_mag = self.request.GET.get("min_magnitude")
         if min_mag:
             try:
                 queryset = queryset.filter(magnitude__gte=float(min_mag))
