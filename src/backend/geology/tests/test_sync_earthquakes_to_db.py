@@ -101,6 +101,8 @@ class TestSyncEarthquakesToDB:
             longitude=0,
         )
 
+        obj = Earthquake.objects.first()
+
         # 3. コマンド実行と例外確認
         with pytest.raises(RuntimeError):
             call_command("sync_earthquakes_to_db")
@@ -109,4 +111,5 @@ class TestSyncEarthquakesToDB:
         # ただし、今回のコードの実装では transaction.atomic は query.result() の後に開始されるため、
         # クエリ段階でのエラーならデータ削除処理には到達していないはず。
         assert Earthquake.objects.count() == 1
-        assert Earthquake.objects.first().usgs_id == "existing_data"
+        assert obj is not None
+        assert obj.usgs_id == "existing_data"

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from django.utils import timezone
 
@@ -22,7 +24,7 @@ class TestEarthquakeModel:
 
     def test_default_ordering(self):
         """Metaクラスの ordering = ['-timestamp'] が効いているかテスト"""
-        time_old = timezone.now() - timezone.timedelta(hours=1)
+        time_old = timezone.now() - timedelta(hours=1)
         time_new = timezone.now()
 
         # 古いデータを先に作成

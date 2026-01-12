@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from django.urls import reverse
 from django.utils import timezone
@@ -31,7 +33,7 @@ class TestEarthquakeListView:
         # 2. 最新だが小さい地震 (今日, M4.5) -> Osaka
         Earthquake.objects.create(
             usgs_id="eq2",
-            timestamp=now - timezone.timedelta(hours=1),
+            timestamp=now - timedelta(hours=1),
             magnitude=4.5,
             place="Osaka",
             depth=10.0,
@@ -41,7 +43,7 @@ class TestEarthquakeListView:
         # 3. 古い地震 (10日前, M7.0) -> Sendai
         Earthquake.objects.create(
             usgs_id="eq3",
-            timestamp=now - timezone.timedelta(days=10),
+            timestamp=now - timedelta(days=10),
             magnitude=7.0,
             place="Sendai",
             depth=20.0,

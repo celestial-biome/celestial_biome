@@ -18,6 +18,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Language**        | Python                | **3.12**    |                          |
 | **Pkg Manager**     | **uv**                | Latest      | **pip/poetry 使用禁止**  |
 | **Lint/Fmt**        | Ruff                  | Latest      | Enforced by pre-commit   |
+| **Type Check** 　　　| **Ty** 　　　　　　　　　| Latest      | **Static Type Checker** |
 | **Testing**         | pytest                | Latest      |                          |
 | **Monitoring**      | Sentry                | Latest      | Python SDK               |
 | **Async**           | **Cloud Tasks**       | -           | No Celery/Redis          |
@@ -123,21 +124,25 @@ Backend と Frontend の型同期は、OpenAPI スキーマを介して行いま
 2.  Backend: `drf-spectacular` 経由で `schema.yml` (OpenAPI) を生成する。
 3.  Frontend: `openapi-typescript` を実行し、Backend の型定義を TypeScript 型として自動生成・取り込みを行う。
 
-### 2. Code Quality (Pre-commit)
+### 2. Code Quality (Linting & Type Checking)
 
-コミット時に `pre-commit` フックが作動し、コード品質を強制します。
+コミット時および CI 実行時に、以下のツールによる品質チェックが強制されます。
 
-- Backend: `Ruff` による Lint と Format 修正。
+- Backend:
+  - `Ruff`: Lint と Format (pre-commit で強制)
+  - `Ty`: 静的型チェック (CI で強制)
 
-- Frontend: `Biome` による Lint と Format 修正。
+- Frontend:
+  - `Biome`: Lint と Format (pre-commit で強制)
 
 手動実行する場合：
 
 ```text
 # Backend (src/backend)
 
-uv run ruff check --fix .
-uv run ruff format .
+uv run ruff check --fix .  # Lint修正
+uv run ruff format .       # Format修正
+uv run ty check            # 型チェック実行
 
 # Frontend (src/frontend)
 
