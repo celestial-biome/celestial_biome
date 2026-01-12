@@ -14,7 +14,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | ------------------- | --------------------- | ----------- | ------------------------ |
 | **Framework**       | Django                | **5.2 LTS** | App Config / ORM         |
 | **API**             | Django REST Framework | Latest      | API Construction         |
-| **Schema**          | drf-spectacular       | Latest      | OpenAPI/Swagger Auto-gen |
+| **Schema**          | drf-spectacular       | Latest      | **Swagger UI / OpenAPI 3** |
 | **Language**        | Python                | **3.12**    |                          |
 | **Pkg Manager**     | **uv**                | Latest      | **pip/poetry 使用禁止**  |
 | **Lint/Fmt**        | Ruff                  | Latest      | Enforced by pre-commit   |
@@ -215,9 +215,20 @@ end
     - **Transaction**: データの不整合を防ぐため、`transaction.atomic` を用いて全削除・一括挿入（Bulk Create）を安全に行います。
 3.  **Serving**: Backend API は **Cloud SQL** を参照してデータを返却。これにより、BigQuery の起動オーバーヘッドを回避し、高速なレスポンスを実現。
     - **Optimization**: 取得したデータに対し、Pandas を用いて Pivot 変換（Long -> Wide）や欠損値の補完（Forward Fill）を行い、Frontend が描画しやすい形式でレスポンスします。
-4.  **Visualization**: Frontend (Next.js + Recharts) でデータを可視化。
+4.  **Visualization**: Frontend (Next.js + Echarts) でデータを可視化。
 
-### Management Commands
+## 📚 API Documentation (Swagger UI)
+
+drf-spectacular により、OpenAPI 仕様書とインタラクティブなドキュメントが自動生成されます。 ローカル環境起動中、以下のURLからアクセス可能です。
+
+- Swagger UI: http://localhost:8000/api/schema/swagger-ui/
+  - APIの仕様確認、パラメータ (`start_date`, `end_date`, `country`) のテスト実行が可能です。
+- Redoc: http://localhost:8000/api/schema/redoc/
+- Schema (YAML): http://localhost:8000/api/schema/
+
+
+
+## 🛠 Management Commands
 
 - **Ingest Space Weather Data**
   NOAA から宇宙天気データを手動で取得・保存します。
