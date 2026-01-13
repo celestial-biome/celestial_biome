@@ -13,7 +13,7 @@ Celestial Biome は、さまざまな計測可能なデータを蓄積・統合�
 By visualizing the synthesis of elements that influence human life—ranging from **coffee, wine, and fly fishing** to **space weather and economic activities**—I aim to uncover hidden connections and provide new metrics for decision-making.
 
 
-Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと厳格な運用ルールに基づき開発されています。
+Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと厳格な運用ルールに基づき開発しています。
 
 ## 🌍 Production Environment
 
@@ -251,7 +251,27 @@ drf-spectacular により、OpenAPI 仕様書とインタラクティブなド�
 - Redoc: http://localhost:8000/api/schema/redoc/
 - Schema (YAML): http://localhost:8000/api/schema/
 
+## 📡 Data Sources
 
+本プラットフォームでは、以下の信頼性の高い外部データソースから定期的にデータを収集・統合しています。
+
+### 1. Space Weather (宇宙天気)
+- **Source:** [NOAA Space Weather Prediction Center (SWPC)](https://www.swpc.noaa.gov/)
+- **Description:** 太陽活動と地球周辺の宇宙環境データ。
+  - **GOES Satellite:** 太陽フレア監視のためのX線フラックス (Primary Satellite)。
+  - **Solar Wind:** 太陽風の速度 (Plasma) および 惑星間磁場 (Magnetometer / Bz)。
+  - **Kp Index:** 地磁気嵐の大きさを表す指数。
+
+### 2. Geology (地質・地震)
+- **Source:** [USGS Earthquake Hazards Program](https://earthquake.usgs.gov/)
+- **Description:** USGS Real-time Notifications, Feeds, and Web Services を使用し、世界中で発生した地震データを取得。
+  - **Metrics:** 発生時刻、マグニチュード (M2.5以上)、震源地 (緯度・経度・深さ)。
+
+### 3. World Economy (世界経済)
+- **Source:** Yahoo Finance & The World Bank
+- **Description:** 市場心理と経済のファンダメンタルズを可視化するための指標。
+  - **Yahoo Finance:** 主要国の株価指数 (S&P 500, Nikkei 225, FTSE 100, etc.) を `yfinance` 経由で取得。
+  - **World Bank Open Data:** 各国のGDPやインフレ率などのマクロ経済指標を `wbgapi` 経由で取得。
 
 ## 🛠 Management Commands
 
