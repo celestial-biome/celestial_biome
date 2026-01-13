@@ -1,8 +1,16 @@
 # Celestial Biome
 
-**Celestial Biome** は、コーヒー、ワイン、フライフィッシング、宇宙、アウトドアといった要素を統合するプラットフォームプロジェクトです。
+**Celestial Biome** はさまざまなデータを蓄積しそれらから特異点を見つけ、コーヒー、ワイン、フライフィッシング、宇宙、アウトドアといった要素を統合するプラットフォームプロジェクトです。（開発中）
 
 Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと厳格な運用ルールに基づき開発されています。
+
+## 🌍 Production Environment
+
+本番環境は以下の URL で稼働しています。
+
+- **Frontend (App):** https://app.celestial-biome.com
+- **Backend (API):** Cloud Run Service (Auto-generated URL)
+- **Admin Panel:** (Backend URL)/admin/
 
 ## 🏗 Architecture & Tech Stack
 
@@ -41,6 +49,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 
 | Component          | Technology          | Note                                     |
 | ------------------ | ------------------- | ---------------------------------------- |
+| **Domain**　　　　　　| Custom Domain 　　　| Terraform & Cloud Run Mapping 　　　　　　　|
 | **Cloud**          | Google Cloud (GCP)  |                                          |
 | **Compute**        | Cloud Run           | Frontend & Backend (Standalone)          |
 | **ETL / Batch**    | Cloud Run Jobs      | Scheduled by Cloud Scheduler             |
@@ -253,7 +262,9 @@ drf-spectacular により、OpenAPI 仕様書とインタラクティブなド�
 
 ### Deployment
 
-GitHub Actions により、`main` ブランチへのプッシュで自動的に Build と Cloud Run への Deploy が行われます。
+GitHub Actions により、`main` ブランチへのプッシュで自動的に Build と Cloud Run への Deploy が行われます。　　
+
+CI/CD Pipeline Feature: Frontend のビルドプロセスにおいて、デプロイ済みの Backend URL を gcloud コマンドで動的に取得し、NEXT_PUBLIC_API_URL として注入しています。これにより、環境変数のハードコーディングや手動設定を排除しています。
 
 ### Database Migration (Production)
 

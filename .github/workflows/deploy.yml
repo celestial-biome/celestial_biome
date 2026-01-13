@@ -8,8 +8,6 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: asia-northeast1
   REPO_NAME: app-repo
-  # ★削除: ここでの直書きはやめます
-  # BACKEND_URL: ...
 
 jobs:
   build-and-deploy:
@@ -51,14 +49,12 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
 
-      # ★追加: BackendのURLを動的に取得して環境変数にセット
+      # BackendのURLを動的に取得して環境変数にセット
       - name: Get Backend URL
         run: |
           BACKEND_URL=$(gcloud run services describe celestial-backend --region ${{ env.REGION }} --format 'value(status.url)')
           echo "BACKEND_URL=$BACKEND_URL" >> $GITHUB_ENV
           echo "Backend URL is $BACKEND_URL"
-
-      # ... (Jobの更新ステップはそのまま) ...
 
       # 5. Build & Push (Frontend)
       - name: Build and Push Frontend
@@ -68,7 +64,7 @@ jobs:
           file: ./src/frontend/Dockerfile
           push: true
           tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}
-          # フロントエンドのビルド時に、さっき取得したURLを埋め込む
+          # フロントエンドのビルド時に、取得したURLを埋め込む
           build-args: |
             NEXT_PUBLIC_API_URL=${{ env.BACKEND_URL }}
 

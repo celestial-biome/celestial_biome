@@ -19,18 +19,16 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-dev-key")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # DockerやLBからのアクセスを許可するために環境変数から取得
-# 開発中はとりあえず '*' (全許可) でも動きますが、以下のように書くとスマートです
+# 開発中はとりあえず '*' (全許可) でも動きますが、以下のように書くとスマート
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 if DEBUG:
     ALLOWED_HOSTS += ["*"]
 
 # 2. CSRF_TRUSTED_ORIGINS の追加 (★重要)
-# Cloud Run (HTTPS) 経由で管理画面 (/admin) にログインするために必須です。
-# これがないと、ログインしようとした瞬間にエラーになります。
+# Cloud Run (HTTPS) 経由で管理画面 (/admin) にログインするために必須
 CSRF_TRUSTED_ORIGINS = ["https://*.run.app"]
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -143,20 +141,20 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # WhiteNoiseを使って圧縮・キャッシュを行う設定
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Cloud Runのドメインからのアクセスを許可します
-# 今は疎通確認なので、Cloud Runの全ドメインを許可する設定が簡単で安全です
+# Cloud Runのドメインからのアクセスを許可
+# 今は疎通確認なので、Cloud Runの全ドメインを許可する設定
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.run\.app$",
 ]
 
-# 本番のNext.jsのURLと、ローカル開発のURLを許可します
+# 本番のNext.jsのURLと、ローカル開発のURLを許可
 CORS_ALLOWED_ORIGINS = [
     "https://app.celestial-biome.com",
     "http://localhost:3000",
 ]
 
-# CSRFの設定も念のため追加しておくと安心です
-# (もし将来バックエンドもドメイン化して管理画面にアクセスする場合などに必要)
+# CSRFの設定も念のため追加しておくと安心
+# (将来バックエンドもドメイン化して管理画面にアクセスする場合などに必要)
 CSRF_TRUSTED_ORIGINS = [
     "https://*.run.app",
     "https://app.celestial-biome.com",
