@@ -10,6 +10,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.33.0",
     "clsx": "^2.1.1",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.5",

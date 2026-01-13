@@ -20,6 +20,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
     "skyfield>=1.53",
+    "sentry-sdk[django]>=2.0.0",
     "wbgapi>=1.0.12",
     "whitenoise>=6.11.0",
     "yfinance>=1.0",

@@ -2,6 +2,27 @@ import os
 from pathlib import Path
 
 import dj_database_url
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
+# Terraform (Cloud Run) で設定された SENTRY_DSN がある場合のみ有効化
+if os.environ.get("SENTRY_DSN"):
+    sentry_sdk.init(
+        dsn=os.environ.get("SENTRY_DSN"),
+        integrations=[
+            DjangoIntegration(),
+        ],
+        # 環境名 (production, development, staging)
+        environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
+        # パフォーマンス監視 (Traces)
+        # 環境変数 SENTRY_TRACES_SAMPLE_RATE で制御 (デフォルト 0.0 = 無効)
+        # 開発環境なら 1.0 (全件送信) にしておくとデバッグしやすいです
+        traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", 0.0)),
+        # プロファイリング (必要に応じて有効化)
+        profiles_sample_rate=float(os.environ.get("SENTRY_PROFILES_SAMPLE_RATE", 0.0)),
+        # ユーザーの個人情報(PII)を送信しない
+        send_default_pii=False,
+    )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
