@@ -1,6 +1,17 @@
 # Celestial Biome
 
-**Celestial Biome** はさまざまなデータを蓄積しそれらから特異点を見つけ、コーヒー、ワイン、フライフィッシング、宇宙、アウトドアといった要素を統合するプラットフォームプロジェクトです。（開発中）
+**Celestial Biome is a platform designed to discover "Singularities"—qualitative turning points and unseen insights—by integrating diverse measurable data.**
+
+Celestial Biome は、さまざまな計測可能なデータを蓄積・統合し、そこから**「特異点（質的な転換点）」**を見つけ出すプラットフォームプロジェクトです。（開発中）
+
+私は、一見無関係に見える以下の要素を横断的に可視化し、複雑系の中に潜む相関関係を明らかにすることで、人生やプロジェクトにおける意思決定の新たな羅針盤を構築しています。
+
+* **Sensory:** Coffee, Wine, Fly Fishing (五感・感性)
+* **Environment:** Space, Outdoor, Geology (自然環境・宇宙)
+* **Society:** Economy, Market Indicators (社会・経済活動)
+
+By visualizing the synthesis of elements that influence human life—ranging from **coffee, wine, and fly fishing** to **space weather and economic activities**—I aim to uncover hidden connections and provide new metrics for decision-making.
+
 
 Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと厳格な運用ルールに基づき開発されています。
 
@@ -14,7 +25,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 
 ## 🏗 Architecture & Tech Stack
 
-[cite_start]本プロジェクトは以下の技術スタックとバージョンを厳守して開発されています。
+本プロジェクトは以下の技術スタックとバージョンを厳守して開発されています。
 
 ### Backend (Server Side)
 
