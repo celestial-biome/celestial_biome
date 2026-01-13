@@ -151,8 +151,15 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 
 # 本番のNext.jsのURLと、ローカル開発のURLを許可します
 CORS_ALLOWED_ORIGINS = [
-    # "https://celestial-frontend-617827263662.asia-northeast1.run.app", # ★あなたのFrontend URLに書き換えてください
+    "https://app.celestial-biome.com",
     "http://localhost:3000",
+]
+
+# CSRFの設定も念のため追加しておくと安心です
+# (もし将来バックエンドもドメイン化して管理画面にアクセスする場合などに必要)
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.run.app",
+    "https://app.celestial-biome.com",
 ]
 
 # Django REST Framework の設定
