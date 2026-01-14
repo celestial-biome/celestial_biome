@@ -27,17 +27,6 @@ export default withSentryConfig(nextConfig, {
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
   },
-
-  // ▼▼▼ 修正: compilation に依存せず、エラーをコンソールに出してビルドを落とす ▼▼▼
-  errorHandler: (err) => {
-    console.error('========================================================');
-    console.error('Sentry CLI Plugin Error:');
-    console.error(err);
-    console.error('========================================================');
-    // エラーを再度投げてビルドを失敗させる（これでログに気づけます）
-    throw err;
-  },
-
   // -------------------------------------------------------------------------
   // Sentry SDK Options (Next.js specific)
   // -------------------------------------------------------------------------
