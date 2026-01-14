@@ -8,49 +8,45 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  // For all available options, see:
-  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
+  // -------------------------------------------------------------------------
+  // Sentry Webpack Plugin Options
+  // -------------------------------------------------------------------------
   org: 'celestial-biome',
-
   project: 'celestial-biome-frontend',
 
-  // Only print logs for uploading source maps in CI
+  // CI環境ではログを出力させる (CI=true なので silent: false になる)
   silent: !process.env.CI,
 
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  // ソースマップを広めにアップロードしてスタックトレースを綺麗にする
   widenClientFileUpload: true,
 
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
+  // 広告ブロッカー対策
   tunnelRoute: '/monitoring',
 
-  automaticVercelMonitors: true,
-
+  // アップロード完了後にソースマップを削除する (Dockerイメージ軽量化)
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
   },
-  errorHandler: (err, invokeErr, compilation) => {
-    compilation.warnings.push('Sentry CLI Plugin: ' + err.message);
-    // ↓ これをコメントアウト解除すると、Sentryエラー時にビルドを強制停止できます
-    // throw new Error('Sentry CLI Plugin Failed: ' + err.message);
-  },
-  webpack: {
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
 
-    // Tree-shaking options for reducing bundle size
-    treeshake: {
-      // Automatically tree-shake Sentry logger statements to reduce bundle size
-      removeDebugLogging: true,
-    },
+  // ▼▼▼ 修正: compilation に依存せず、エラーをコンソールに出してビルドを落とす ▼▼▼
+  errorHandler: (err) => {
+    console.error('========================================================');
+    console.error('Sentry CLI Plugin Error:');
+    console.error(err);
+    console.error('========================================================');
+    // エラーを再度投げてビルドを失敗させる（これでログに気づけます）
+    throw err;
+  },
+
+  // -------------------------------------------------------------------------
+  // Sentry SDK Options (Next.js specific)
+  // -------------------------------------------------------------------------
+  reactComponentAnnotation: {
+    enabled: true,
+  },
+
+  // 警告が出ていたので webpack オプション内に移動
+  webpack: {
+    automaticVercelMonitors: true,
   },
 });
