@@ -68,6 +68,9 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=${{ env.BACKEND_URL }}
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+            SENTRY_RELEASE=${{ github.sha }}
+          # ▼▼▼ 今回だけ追加（確認できたら後で消してOK） ▼▼▼
+          no-cache: true
 
       # 6. Deploy to Cloud Run (Frontend)
       - name: Deploy Frontend
