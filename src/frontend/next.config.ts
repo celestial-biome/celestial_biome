@@ -13,7 +13,7 @@ export default withSentryConfig(nextConfig, {
   project: 'celestial-biome-frontend', // Terraform で作成した正しいプロジェクトSlugを指定
 
   // ビルド中のソースマップアップロード時にログを表示しない（CIのログが見づらくなるため）
-  silent: !process.env.CI,
+  silent: false,
 
   // クライアント側のソースマップを広くアップロードする
   widenClientFileUpload: true,
