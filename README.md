@@ -39,7 +39,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Lint/Fmt**        | Ruff                  | Latest      | Enforced by pre-commit   |
 | **Type Check** 　　　| **Ty** 　　　　　　　　　| Latest      | **Static Type Checker** |
 | **Testing**         | pytest                | Latest      |                          |
-| **Monitoring**      | Sentry                | Latest      | Python SDK               |
+| **Monitoring**      | Sentry SDK (Django)   | ~2.0.0      | Runtime Error & Performance Tracking |
 | **Async**           | **Cloud Tasks**       | -           | No Celery/Redis          |
 | **Data Analysis**　 | **Pandas**            | Latest      | Data manipulation        |
 
@@ -69,6 +69,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Storage**        | Cloud Storage (GCS) | Static & Media files                     |
 | **IaC**            | Terraform           | Infrastructure management                |
 | **CI/CD**          | GitHub Actions      | CI, Build, Deploy                        |
+| **Monitoring**     | Sentry              | Error Tracking, Source Maps (Frontend)   |
 
 ---
 
@@ -295,7 +296,19 @@ drf-spectacular により、OpenAPI 仕様書とインタラクティブなド�
 
 GitHub Actions により、`main` ブランチへのプッシュで自動的に Build と Cloud Run への Deploy が行われます。　　
 
-CI/CD Pipeline Feature: Frontend のビルドプロセスにおいて、デプロイ済みの Backend URL を gcloud コマンドで動的に取得し、NEXT_PUBLIC_API_URL として注入しています。これにより、環境変数のハードコーディングや手動設定を排除しています。
+CI/CD Pipeline Feature:
+1. Dynamic Backend URL:
+Frontend のビルドプロセスにおいて、デプロイ済みの Backend URL を gcloud コマンドで動的に取得し、NEXT_PUBLIC_API_URL として注入しています。これにより、環境変数のハードコーディングや手動設定を排除しています。
+2. Sentry Release Automation:
+ビルド時に Sentry CLI を実行し、ソースマップ（Source Maps）を自動的にアップロードしています。これにより、本番環境で発生したエラーを Minify 前の元のソースコード行で特定・デバッグすることが可能です。
+
+### Monitoring & Observability
+
+Sentry を活用し、Frontend / Backend 双方で包括的な監視体制を構築しています。
+
+**Monitoring Strategy:**
+* **Frontend:** ビルドパイプライン（CI/CD）でソースマップを自動アップロードし、Minify されたコードを復元してエラー箇所を特定可能にしています。
+* **Backend:** `sentry-sdk` の Django 統合を使用し、実行時エラーのスタックトレース収集と、API レスポンスタイムのパフォーマンストレースを実施しています。
 
 ### Database Migration (Production)
 
