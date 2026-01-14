@@ -30,6 +30,16 @@ export default withSentryConfig(nextConfig, {
   // side errors will fail.
   tunnelRoute: '/monitoring',
 
+  automaticVercelMonitors: true,
+
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
+  errorHandler: (err, invokeErr, compilation) => {
+    compilation.warnings.push('Sentry CLI Plugin: ' + err.message);
+    // ↓ これをコメントアウト解除すると、Sentryエラー時にビルドを強制停止できます
+    // throw new Error('Sentry CLI Plugin Failed: ' + err.message);
+  },
   webpack: {
     // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
     // See the following for more information:
