@@ -12,6 +12,10 @@ RUN npm ci
 # 2. Builder Stage: アプリのビルド
 # ---------------------------------------------------
 FROM node:22-bookworm-slim AS builder
+
+# Sentry CLI が SSL 通信できるように証明書を入れる ▼▼▼
+RUN apt-get update && apt-get install -y ca-certificates
+
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
