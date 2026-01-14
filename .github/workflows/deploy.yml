@@ -49,7 +49,7 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
 
-      # BackendのURLを動的に取得して環境変数にセット
+      # BackendのURLを動的に取得して環境変数にセットする
       - name: Get Backend URL
         run: |
           BACKEND_URL=$(gcloud run services describe celestial-backend --region ${{ env.REGION }} --format 'value(status.url)')
