@@ -24,6 +24,9 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ARG SENTRY_AUTH_TOKEN
 ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
 
+# Sentry のログが表示
+ENV CI=true
+
 RUN npm run build
 
 # ---------------------------------------------------
