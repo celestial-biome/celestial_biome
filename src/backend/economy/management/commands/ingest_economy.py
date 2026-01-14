@@ -97,9 +97,9 @@ class Command(BaseCommand):
             # ジョブ設定: スキーマ指定 と WRITE_TRUNCATE（上書き）
             job_config = bigquery.LoadJobConfig(
                 schema=[
-                    bigquery.SchemaField("country_iso3", "STRING"),
-                    bigquery.SchemaField("date", "DATE"),  # 文字列からDATEへ自動変換
-                    bigquery.SchemaField("indicator_type", "STRING"),
+                    bigquery.SchemaField("country_iso3", "STRING", mode="REQUIRED"),
+                    bigquery.SchemaField("date", "DATE", mode="REQUIRED"),  # 文字列からDATEへ自動変換
+                    bigquery.SchemaField("indicator_type", "STRING", mode="REQUIRED"),
                     bigquery.SchemaField("value", "FLOAT"),
                     bigquery.SchemaField("ingested_at", "TIMESTAMP"),
                 ],

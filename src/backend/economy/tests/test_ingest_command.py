@@ -65,3 +65,29 @@ class IngestEconomyCommandTest(TestCase):
         self.assertIn("country_iso3", first_row)
         self.assertIn("value", first_row)
         self.assertIn("ingested_at", first_row)
+
+        # データの構造チェック
+        first_row = rows_to_insert[0]
+        self.assertIn("country_iso3", first_row)
+        self.assertIn("value", first_row)
+        self.assertIn("ingested_at", first_row)
+
+        # 【追加推奨】 job_config のスキーマ設定が REQUIRED になっているか検証
+        # load_table_from_json の引数から job_config を取得
+        # 呼び出し形式: client.load_table_from_json(rows, ref, job_config=config)
+        kwargs = mock_client_instance.load_table_from_json.call_args.kwargs
+        job_config = kwargs.get("job_config")
+
+        self.assertIsNotNone(job_config, "job_config should be passed")
+
+        # スキーマ定義を確認
+        # schema は SchemaField のリスト
+        schema_map = {field.name: field.mode for field in job_config.schema}
+
+        # 必須項目が REQUIRED になっているかチェック
+        self.assertEqual(schema_map.get("country_iso3"), "REQUIRED")
+        self.assertEqual(schema_map.get("date"), "REQUIRED")
+        self.assertEqual(schema_map.get("indicator_type"), "REQUIRED")
+
+        # 任意項目が NULLABLE (または指定なし=デフォルト) であるかチェック
+        self.assertIn(schema_map.get("value"), ["NULLABLE", None])
