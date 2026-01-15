@@ -41,6 +41,33 @@ jobs:
           push: true
           tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
 
+      # Cloud Run Jobs の更新 (Ingest と Sync)
+      - name: Update Cloud Run Jobs
+        run: |
+          gcloud run jobs update ingest-space-weather-job \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
+          gcloud run jobs update sync-space-weather-db-job \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
+          gcloud run jobs update ingest-earthquakes-job \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
+          gcloud run jobs update sync-earthquakes-db-job \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
+          gcloud run jobs update ingest-economy-job \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
+          gcloud run jobs update sync-economy-db-job \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
       # 4. Deploy to Cloud Run (Backend)
       - name: Deploy Backend
         uses: google-github-actions/deploy-cloudrun@v2
