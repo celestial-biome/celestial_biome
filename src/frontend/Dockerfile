@@ -28,10 +28,6 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
 
-# Sentry のビルド用トークンを受け取る
-ARG SENTRY_AUTH_TOKEN
-ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
-
 # リリース名（コミットハッシュ）を明示的に受け取る
 ARG SENTRY_RELEASE
 ENV SENTRY_RELEASE=${SENTRY_RELEASE}
@@ -39,7 +35,10 @@ ENV SENTRY_RELEASE=${SENTRY_RELEASE}
 # Sentry のログが表示
 ENV CI=true
 
-RUN npm run build
+# ビルドコマンド実行時のみ、シークレットを環境変数として注入する
+# id=sentry_token は GitHub Actions 側の設定と紐づく
+RUN --mount=type=secret,id=sentry_token,env=SENTRY_AUTH_TOKEN \
+    npm run build
 
 # ---------------------------------------------------
 # 3. Runner Stage: 本番実行用イメージ

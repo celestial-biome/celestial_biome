@@ -86,12 +86,15 @@ jobs:
           file: ./src/frontend/Dockerfile
           push: true
           tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}
-          # フロントエンドのビルド時に、取得したURLを埋め込み、SentryのトークンとDSNも渡す
+          # フロントエンドのビルド時に、取得したURLを埋め込み、SentryのDSNを渡す
           build-args: |
             NEXT_PUBLIC_API_URL=${{ env.BACKEND_URL }}
-            SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
             SENTRY_RELEASE=${{ github.sha }}
             NEXT_PUBLIC_SENTRY_DSN=${{ secrets.SENTRY_FRONTEND_DSN }}
+
+          # Dockerfile の id=sentry_token に値を渡す
+          secrets: |
+            sentry_token=${{ secrets.SENTRY_AUTH_TOKEN }}
 
       # 6. Deploy to Cloud Run (Frontend)
       - name: Deploy Frontend
