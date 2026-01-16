@@ -71,12 +71,11 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
 
-      # BackendのURLを動的に取得して環境変数にセットする
-      - name: Get Backend URL
+      # BackendのURLを環境変数にセットする (カスタムドメインを指定)
+      - name: Set Backend URL
         run: |
-          BACKEND_URL=$(gcloud run services describe celestial-backend --region ${{ env.REGION }} --format 'value(status.url)')
-          echo "BACKEND_URL=$BACKEND_URL" >> $GITHUB_ENV
-          echo "Backend URL is $BACKEND_URL"
+          echo "BACKEND_URL=https://api.celestial-biome.com" >> $GITHUB_ENV
+          echo "Backend URL is set to https://api.celestial-biome.com"
 
       # 5. Build & Push (Frontend)
       - name: Build and Push Frontend
