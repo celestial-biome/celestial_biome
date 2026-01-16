@@ -12,11 +12,14 @@ services:
 
       # 【File Mount / Credential Injection】
       # Google Cloudの認証ファイルを、PC（ホスト）から直接コンテナに貸し出しています。
-      # :ro は "Read Only" の意味。コンテナ側が誤ってキーファイルを書き換える事故を防ぐ「プロの常套手段」です。
+      # :ro は "Read Only" の意味。コンテナ側が誤ってキーファイルを書き換える事故を防ぐ「プロの常套手段」
       - ~/.config/gcloud/application_default_credentials.json:/tmp/keys/gcp-creds.json:ro
     ports:
       - "8000:8000"
     environment:
+      # Pythonに .pyc ファイル（バイトコード）を書き出させない設定
+      - PYTHONDONTWRITEBYTECODE=1
+
       - DJANGO_SECRET_KEY=dev_secret_key
       - DEBUG=True
       # "db" はこのファイル内のサービス名を指します。Docker内部DNSが名前解決をしてくれます。
@@ -42,7 +45,7 @@ services:
     volumes:
       - ./src/frontend:/app
 
-      # 【Named Volume】(今回の修正ポイント)
+      # 【Named Volume】
       # コンテナ内の /app/node_modules をこのボリュームに逃がします。
       # これにより、ホスト側の空の node_modules がコンテナ内を上書きしてエラーになるのを防ぎつつ、
       # コンテナ再作成時もインストール済みパッケージ(キャッシュ)を保持して高速化します。
