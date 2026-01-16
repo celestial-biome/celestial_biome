@@ -2,7 +2,6 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAdminUser
 
 urlpatterns = [
@@ -22,15 +21,14 @@ if settings.DEBUG:
     ]
 else:
     # 本番環境: 管理者(IsAdminUser)のみアクセスOK
-    # ビューをラップして権限チェックを追加する
-
-    # 1. スキーマJSON (管理者のみ)
+    # as_view の引数で permission_classes を指定する
     urlpatterns += [
-        path("api/schema/", permission_classes([IsAdminUser])(SpectacularAPIView.as_view()), name="schema"),
+        # 1. スキーマJSON (管理者のみ)
+        path("api/schema/", SpectacularAPIView.as_view(permission_classes=[IsAdminUser]), name="schema"),
         # 2. Swagger UI (管理者のみ)
         path(
             "api/schema/swagger-ui/",
-            permission_classes([IsAdminUser])(SpectacularSwaggerView.as_view(url_name="schema")),
+            SpectacularSwaggerView.as_view(url_name="schema", permission_classes=[IsAdminUser]),
             name="swagger-ui",
         ),
     ]
