@@ -166,7 +166,6 @@ CORS_ALLOWED_ORIGINS = [
 
 # CSRF設定: 新しいドメインでの管理画面ログインを許可
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.run.app",
     "https://app.celestial-biome.com",
     "https://api.celestial-biome.com",
 ]
