@@ -45,10 +45,6 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 if DEBUG:
     ALLOWED_HOSTS += ["*"]
 
-# 2. CSRF_TRUSTED_ORIGINS (重要)
-# Cloud Run (HTTPS) 経由で管理画面 (/admin) にログインするために必須
-CSRF_TRUSTED_ORIGINS = ["https://*.run.app"]
-
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
