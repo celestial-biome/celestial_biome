@@ -31,7 +31,8 @@ async function getEconomyData(): Promise<EconomyApiResponse | null> {
 // 2. Space Weather データ取得ロジック
 async function getSpaceWeatherData(): Promise<WeatherData[] | null> {
   try {
-    const res = await fetch(`${getApiUrl()}/api/v1/astronomy/space-weather/`, {
+    // 過去30日分のデータを取得する
+    const res = await fetch(`${getApiUrl()}/api/v1/astronomy/space-weather/?days=30`, {
       next: { revalidate: 3600 },
     });
 
@@ -46,7 +47,8 @@ async function getSpaceWeatherData(): Promise<WeatherData[] | null> {
 // 3. Earthquake データ取得ロジック
 async function getEarthquakeData(): Promise<Earthquake[] | null> {
   try {
-    const res = await fetch(`${getApiUrl()}/api/v1/geology/earthquakes/`, {
+    // 過去30日分のデータを取得する
+    const res = await fetch(`${getApiUrl()}/api/v1/geology/earthquakes/?days=30`, {
       next: { revalidate: 3600 },
     });
 
