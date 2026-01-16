@@ -40,12 +40,12 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-dev-key")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # DockerやLBからのアクセスを許可するために環境変数から取得
-# 開発中はとりあえず '*' (全許可) でも動きますが、以下のように書くとスマート
+# 開発中はとりあえず '*' (全許可) でも動くが、以下のように書くとスマート
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
 if DEBUG:
     ALLOWED_HOSTS += ["*"]
 
-# 2. CSRF_TRUSTED_ORIGINS の追加 (★重要)
+# 2. CSRF_TRUSTED_ORIGINS (重要)
 # Cloud Run (HTTPS) 経由で管理画面 (/admin) にログインするために必須
 CSRF_TRUSTED_ORIGINS = ["https://*.run.app"]
 
@@ -164,9 +164,9 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Cloud Runのドメインからのアクセスを許可
 # 今は疎通確認なので、Cloud Runの全ドメインを許可する設定
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https://.*\.run\.app$",
-]
+# CORS_ALLOWED_ORIGIN_REGEXES = [
+#     r"^https://.*\.run\.app$",
+# ]
 
 # 本番のNext.jsのURLと、ローカル開発のURLを許可
 CORS_ALLOWED_ORIGINS = [
