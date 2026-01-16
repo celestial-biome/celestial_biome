@@ -37,7 +37,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-dev-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # 環境変数が 'True' の場合のみ True になる
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+DEBUG = os.environ.get("DEBUG") == "True"
 
 # DockerやLBからのアクセスを許可するために環境変数から取得
 # 開発中はとりあえず '*' (全許可) でも動くが、以下のように書くとスマート
