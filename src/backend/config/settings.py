@@ -158,23 +158,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # WhiteNoiseを使って圧縮・キャッシュを行う設定
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Cloud Runのドメインからのアクセスを許可
-# 今は疎通確認なので、Cloud Runの全ドメインを許可する設定
-# CORS_ALLOWED_ORIGIN_REGEXES = [
-#     r"^https://.*\.run\.app$",
-# ]
-
 # 本番のNext.jsのURLと、ローカル開発のURLを許可
 CORS_ALLOWED_ORIGINS = [
     "https://app.celestial-biome.com",
     "http://localhost:3000",
 ]
 
-# CSRFの設定も念のため追加しておくと安心
-# (将来バックエンドもドメイン化して管理画面にアクセスする場合などに必要)
+# CSRF設定: 新しいドメインでの管理画面ログインを許可
 CSRF_TRUSTED_ORIGINS = [
     "https://*.run.app",
     "https://app.celestial-biome.com",
+    "https://api.celestial-biome.com",
 ]
 
 # Django REST Framework の設定
