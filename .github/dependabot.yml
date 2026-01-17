@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # 1. GitHub Actions のワークフローを更新
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      actions:
+        patterns: ["*"] # ノイズを減らすため1つのPRにまとめる
+
+  # 2. フロントエンド (Next.js / npm)
+  - package-ecosystem: "npm"
+    directory: "/src/frontend" # package.json のある場所を指定
+    schedule:
+      interval: "weekly"
+    groups:
+      dependencies:
+        patterns: ["*"] # 全部まとめて1つのPRにする（個人開発におすすめ）
+
+  # 3. バックエンド (Django / Python)
+  # 注意: uv.lock はまだ Dependabot がネイティブ対応していない可能性があり注意する（ブランチを切って　uv lock　または uv sync して確認してからマージを検討）
+  - package-ecosystem: "pip"
+    directory: "/src/backend"
+    schedule:
+      interval: "weekly"
+    groups:
+      dependencies:
+        patterns: ["*"]
+
+  # 4. Docker (Backend)
+  - package-ecosystem: "docker"
+    directory: "/src/backend"
+    schedule:
+      interval: "monthly"
