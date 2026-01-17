@@ -20,8 +20,8 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 本番環境は以下の URL で稼働しています。
 
 - **Frontend (App):** https://app.celestial-biome.com
-- **Backend (API):** Cloud Run Service (Auto-generated URL)
-- **Admin Panel:** (Backend URL)/admin/
+- **Backend (API):** https://api.celestial-biome.com
+- **Admin Panel:** https://api.celestial-biome.com/admin/
 
 ## 🏗 Architecture & Tech Stack
 
@@ -290,6 +290,13 @@ drf-spectacular により、OpenAPI 仕様書とインタラクティブなド�
   uv run python manage.py sync_bq_to_db
   ```
 
+### Data Safety & Governance
+- Deletion Protection:
+  BigQuery の Raw データテーブル (Earthquake, Economy 等) は Terraform により deletion_protection = true が設定されており、オペレーションミスによる偶発的なデータ削除を防止しています。
+
+- Secret Management:
+  データベースの認証情報は Secret Manager で厳重に管理され、リポジトリ内に機密情報は一切含まれていません。
+
 ## 🚀 Deployment & Operations
 
 ### Deployment
@@ -297,8 +304,8 @@ drf-spectacular により、OpenAPI 仕様書とインタラクティブなド�
 GitHub Actions により、`main` ブランチへのプッシュで自動的に Build と Cloud Run への Deploy が行われます。　　
 
 CI/CD Pipeline Feature:
-1. Dynamic Backend URL:
-Frontend のビルドプロセスにおいて、デプロイ済みの Backend URL を gcloud コマンドで動的に取得し、NEXT_PUBLIC_API_URL として注入しています。これにより、環境変数のハードコーディングや手動設定を排除しています。
+1. Secure Backend ConnectionL:
+Frontend から Backend への接続は、相互に認証されたカスタムドメイン (`api.celestial-biome.com`) を介して行われます。Backend 側では `ALLOWED_HOSTS` によりこのドメイン以外からのアクセスを遮断し、セキュリティを強化しています。
 2. Sentry Release Automation:
 ビルド時に Sentry CLI を実行し、ソースマップ（Source Maps）を自動的にアップロードしています。これにより、本番環境で発生したエラーを Minify 前の元のソースコード行で特定・デバッグすることが可能です。
 
