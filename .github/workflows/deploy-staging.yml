@@ -60,7 +60,7 @@ jobs:
       # Cloud Run Jobs の更新 (Ingest と Sync) - 全てに -staging を追加
       - name: Update Cloud Run Jobs
         run: |
-          JOBS=("ingest-space-weather-job-staging" "sync-space-weather-db-job-staging" "ingest-earthquakes-job-staging" "sync-earthquakes-db-job-staging" "ingest-economy-job-staging" "sync-economy-db-job-staging")
+          JOBS=("ingest-space-weather-job-staging" "sync-space-weather-db-job-staging" "ingest-earthquakes-job-staging" "sync-earthquakes-db-job-staging" "ingest-economy-job-staging" "sync-economy-db-job-staging" "create-superuser-job-staging")
 
           for job in "${JOBS[@]}"; do
             echo "Updating $job..."
