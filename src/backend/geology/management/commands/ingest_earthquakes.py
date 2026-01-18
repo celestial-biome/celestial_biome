@@ -1,3 +1,4 @@
+import os
 import sys
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -10,7 +11,10 @@ from google.cloud import bigquery
 
 # Constants
 USGS_API_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
-DATASET_ID = "celestial_biome_data"
+
+# BigQuery Config
+# 環境変数 'BQ_DATASET_ID' があればそれを使い、なければデフォルト(本番名)を使う
+DATASET_ID = os.getenv("BQ_DATASET_ID", "celestial_biome_data")
 TABLE_ID = "earthquakes_raw"
 
 

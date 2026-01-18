@@ -1,3 +1,4 @@
+import os
 import sys
 from datetime import datetime, timedelta
 from typing import Any
@@ -17,7 +18,8 @@ SOLAR_WIND = "https://services.swpc.noaa.gov/products/solar-wind"
 KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json"
 
 # BigQuery Config
-DATASET_ID = "celestial_biome_data"
+# 環境変数 'BQ_DATASET_ID' があればそれを使い、なければデフォルト(本番名)を使う
+DATASET_ID = os.getenv("BQ_DATASET_ID", "celestial_biome_data")
 TABLE_ID = "space_weather_metrics"
 
 
