@@ -695,3 +695,95 @@ resource "google_cloud_run_v2_job" "migrate_job" {
     ]
   }
 }
+
+# -----------------------------------------------------
+# 16. Cloud Run Job (Create Superuser)
+# -----------------------------------------------------
+resource "google_cloud_run_v2_job" "create_superuser_job" {
+  name                = "create-superuser-job${local.suffix}"
+  location            = var.region
+  deletion_protection = false
+
+  # パスワードの中身（Version）が作成されるまで待機する設定
+  depends_on = [
+    google_secret_manager_secret_version.admin_password_version
+  ]
+
+  template {
+    template {
+      service_account = google_service_account.job_runner.email
+
+      containers {
+        # アプリのイメージを使用 (CI/CDで更新されるので初回はhelloでもOKだが、アプリコード必須)
+        # ※注意: ここが hello だと manage.py が無いので失敗します。
+        # 初回構築時はエラーになりますが、デプロイ後に実行すればOKです。
+        image = "us-docker.pkg.dev/cloudrun/container/hello"
+
+        # 非対話モードでsuperuserを作成するコマンド
+        command = [
+          "python", "manage.py", "createsuperuser",
+          "--noinput",
+          "--username", "admin", # ユーザー名は固定
+          "--email", "admin@celestial-biome.com"
+        ]
+
+        # パスワードを環境変数として渡す (Djangoがこれを読み取ってパスワードに設定する)
+        env {
+          name = "DJANGO_SUPERUSER_PASSWORD"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.admin_password_secret.secret_id
+              version = "latest"
+            }
+          }
+        }
+
+        # --- 以下、DB接続用共通設定 (他のJobと同じ) ---
+        env {
+          name  = "GOOGLE_CLOUD_PROJECT"
+          value = var.project_id
+        }
+        env {
+          name  = "DB_HOST"
+          value = "/cloudsql/${google_sql_database_instance.postgres.connection_name}"
+        }
+        env {
+          name  = "DB_NAME"
+          value = google_sql_database.database.name
+        }
+        env {
+          name  = "DB_USER"
+          value = google_sql_user.users.name
+        }
+        env {
+          name = "DB_PASSWORD"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.db_password_secret.secret_id
+              version = "latest"
+            }
+          }
+        }
+
+        volume_mounts {
+          name       = "cloudsql"
+          mount_path = "/cloudsql"
+        }
+      }
+
+      volumes {
+        name = "cloudsql"
+        cloud_sql_instance {
+          instances = [google_sql_database_instance.postgres.connection_name]
+        }
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      template[0].template[0].containers[0].image,
+      launch_stage,
+    ]
+  }
+}
