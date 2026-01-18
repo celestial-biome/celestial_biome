@@ -95,6 +95,10 @@ resource "google_cloud_run_v2_job" "ingest_job" {
             }
           }
         }
+        env {
+          name  = "BQ_DATASET_ID"
+          value = var.env_name == "production" ? "celestial_biome_data" : "celestial_biome_data_staging"
+        }
 
         volume_mounts {
           name       = "cloudsql"
@@ -183,6 +187,10 @@ resource "google_cloud_run_v2_job" "sync_db_job" {
               version = "latest"
             }
           }
+        }
+        env {
+          name  = "BQ_DATASET_ID"
+          value = var.env_name == "production" ? "celestial_biome_data" : "celestial_biome_data_staging"
         }
 
         volume_mounts {
@@ -280,6 +288,10 @@ resource "google_cloud_run_v2_job" "ingest_earthquakes_job" {
             }
           }
         }
+        env {
+          name  = "BQ_DATASET_ID"
+          value = var.env_name == "production" ? "celestial_biome_data" : "celestial_biome_data_staging"
+        }
 
         volume_mounts {
           name       = "cloudsql"
@@ -369,6 +381,10 @@ resource "google_cloud_run_v2_job" "sync_earthquakes_job" {
               version = "latest"
             }
           }
+        }
+        env {
+          name  = "BQ_DATASET_ID"
+          value = var.env_name == "production" ? "celestial_biome_data" : "celestial_biome_data_staging"
         }
 
         volume_mounts {
@@ -465,6 +481,10 @@ resource "google_cloud_run_v2_job" "ingest_economy_job" {
             }
           }
         }
+        env {
+          name  = "BQ_DATASET_ID"
+          value = var.env_name == "production" ? "celestial_biome_data" : "celestial_biome_data_staging"
+        }
 
         volume_mounts {
           name       = "cloudsql"
@@ -554,6 +574,10 @@ resource "google_cloud_run_v2_job" "sync_economy_job" {
               version = "latest"
             }
           }
+        }
+        env {
+          name  = "BQ_DATASET_ID"
+          value = var.env_name == "production" ? "celestial_biome_data" : "celestial_biome_data_staging"
         }
 
         volume_mounts {
