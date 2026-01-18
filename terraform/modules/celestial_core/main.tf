@@ -306,6 +306,11 @@ resource "google_cloud_run_v2_service" "frontend" {
         name  = "SENTRY_ENVIRONMENT"
         value = "development"
       }
+      # この環境の正規URLを渡す（staging か prod で動的に変更）
+      env {
+        name  = "CANONICAL_URL"
+        value = var.env_name == "production" ? "https://app.celestial-biome.com" : "https://app-staging.celestial-biome.com"
+      }
     }
   }
 
