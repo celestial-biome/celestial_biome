@@ -392,3 +392,24 @@ resource "google_cloud_run_domain_mapping" "backend_domain" {
     route_name = google_cloud_run_v2_service.backend.name
   }
 }
+
+# -----------------------------------------------------
+# Admin Superuser Password
+# -----------------------------------------------------
+resource "random_password" "admin_password" {
+  length  = 16
+  special = false # トラブル防止のため記号なし
+}
+
+resource "google_secret_manager_secret" "admin_password_secret" {
+  secret_id = "admin-password${local.suffix}"
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.extra_apis]
+}
+
+resource "google_secret_manager_secret_version" "admin_password_version" {
+  secret      = google_secret_manager_secret.admin_password_secret.id
+  secret_data = random_password.admin_password.result
+}
