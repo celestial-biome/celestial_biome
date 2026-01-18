@@ -1,4 +1,5 @@
 import logging
+import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -15,6 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         project_id = settings.GOOGLE_CLOUD_PROJECT
+        dataset_id = os.getenv("BQ_DATASET_ID", "celestial_biome_data")
         # ローカル実行時に .env から読み込めていない場合のガード
         if not project_id:
             # フォールバック (必要であれば記述、基本は設定エラーとして扱う)
@@ -30,7 +32,7 @@ class Command(BaseCommand):
         # 直近7日間のデータを取得するクエリ
         query = f"""
             SELECT timestamp, metric, AVG(value) as value
-            FROM `{project_id}.celestial_biome_data.space_weather_metrics`
+            FROM `{project_id}.{dataset_id}.space_weather_metrics`
             WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
             GROUP BY timestamp, metric
             ORDER BY timestamp ASC

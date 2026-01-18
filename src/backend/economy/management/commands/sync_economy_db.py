@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -12,9 +14,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         client = bigquery.Client()
         project_id = settings.GOOGLE_CLOUD_PROJECT
+        dataset_id = os.getenv("BQ_DATASET_ID", "celestial_biome_data")
 
         # データの存在確認
-        count_query = f"SELECT count(*) as total FROM `{project_id}.celestial_biome_data.economy_raw`"
+        count_query = f"SELECT count(*) as total FROM `{project_id}.{dataset_id}.economy_raw`"
         count_job = client.query(count_query)
         total_rows = list(count_job)[0].total
         self.stdout.write(f"BigQuery Total Rows: {total_rows}")
@@ -27,7 +30,7 @@ class Command(BaseCommand):
         # ingested_at は含めないことで、取り込み時刻違いの同一データを排除します
         query = f"""
             SELECT DISTINCT country_iso3, date, indicator_type, value
-            FROM `{project_id}.celestial_biome_data.economy_raw`
+            FROM `{project_id}.{dataset_id}.economy_raw`
             WHERE date >= '2000-01-01'
             ORDER BY date ASC
         """

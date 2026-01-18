@@ -1,4 +1,5 @@
 import logging
+import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -15,6 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         project_id = settings.GOOGLE_CLOUD_PROJECT
+        dataset_id = os.getenv("BQ_DATASET_ID", "celestial_biome_data")
 
         if not project_id:
             self.stdout.write(self.style.ERROR("GOOGLE_CLOUD_PROJECT is not set."))
@@ -31,7 +33,7 @@ class Command(BaseCommand):
                     SELECT
                         *,
                         ROW_NUMBER() OVER (PARTITION BY usgs_id ORDER BY timestamp DESC) as rn
-                    FROM `{project_id}.celestial_biome_data.earthquakes_raw`
+                    FROM `{project_id}.{dataset_id}.earthquakes_raw`
                     WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
                 )
                 WHERE rn = 1
