@@ -1,0 +1,32 @@
+[
+  {
+    "name": "country_iso3",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "ISO 3166-1 alpha-3 code (e.g. USA, JPN)"
+  },
+  {
+    "name": "date",
+    "type": "DATE",
+    "mode": "REQUIRED",
+    "description": "Date of the record"
+  },
+  {
+    "name": "indicator_type",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Type of indicator (STOCK, GDP, INFLATION)"
+  },
+  {
+    "name": "value",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Numerical value of the indicator"
+  },
+  {
+    "name": "ingested_at",
+    "type": "TIMESTAMP",
+    "mode": "NULLABLE",
+    "description": "Time of ingestion"
+  }
+]

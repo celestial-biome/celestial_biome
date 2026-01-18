@@ -1,0 +1,111 @@
+name: Deploy to Cloud Run (Staging)
+
+on:
+  push:
+    branches: ['staging'] # stagingブランチへのプッシュで実行
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }} # プロジェクトIDは同じ
+  REGION: asia-northeast1
+  REPO_NAME: app-repo-staging # ★修正: リポジトリ名に -staging
+  # ★重要: Staging用のサービスアカウントとWIFプロバイダー
+  # Terraformの出力結果や命名規則に基づいて設定します。
+  # もしGitHub Secretsに 'STAGING_WIF_PROVIDER' 等で登録している場合は ${{ secrets.STAGING_... }} を使ってください。
+  SA_EMAIL: github-actions-sa-staging@celestial-biome-480601.iam.gserviceaccount.com
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Google Cloud 認証 (Staging用)
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          # ★修正: Staging用のWIFプロバイダーを指定する必要があります
+          # 形式: projects/{PROJECT_NUMBER}/locations/global/workloadIdentityPools/celestial-pool-staging/providers/gh-provider-cloudshell
+          # ※ PROJECT_NUMBER が必要です。わからない場合は `gcloud projects describe celestial-biome-480601` で確認するか、Secretsに入れてください。
+          workload_identity_provider: ${{ secrets.STAGING_WIF_PROVIDER }}
+          service_account: ${{ env.SA_EMAIL }}
+
+      # 2. Docker 認証
+      - name: 'Docker Auth'
+        run: |-
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      # 3. Build & Push (Backend)
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/backend
+          file: ./src/backend/Dockerfile
+          push: true
+          tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
+
+      # DBマイグレーションの実行 (Job名に -staging を追加)
+      - name: Run DB Migration
+        run: |
+          gcloud run jobs update migrate-job-staging \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+            --region ${{ env.REGION }}
+
+          gcloud run jobs execute migrate-job-staging --region ${{ env.REGION }} --wait
+
+      # Cloud Run Jobs の更新 (Ingest と Sync) - 全てに -staging を追加
+      - name: Update Cloud Run Jobs
+        run: |
+          JOBS=("ingest-space-weather-job-staging" "sync-space-weather-db-job-staging" "ingest-earthquakes-job-staging" "sync-earthquakes-db-job-staging" "ingest-economy-job-staging" "sync-economy-db-job-staging")
+
+          for job in "${JOBS[@]}"; do
+            echo "Updating $job..."
+            gcloud run jobs update "$job" \
+              --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
+              --region ${{ env.REGION }} &
+          done
+          wait
+
+      # 4. Deploy to Cloud Run (Backend) - サービス名に -staging を追加
+      - name: Deploy Backend
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: celestial-backend-staging
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
+
+      # BackendのURLを環境変数にセットする (Staging用ドメイン)
+      - name: Set Backend URL
+        run: |
+          echo "BACKEND_URL=https://api-staging.celestial-biome.com" >> $GITHUB_ENV
+          echo "Backend URL is set to https://api-staging.celestial-biome.com"
+
+      # 5. Build & Push (Frontend)
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/frontend
+          file: ./src/frontend/Dockerfile
+          push: true
+          tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}
+          # フロントエンドのビルド引数
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ env.BACKEND_URL }}
+            SENTRY_RELEASE=${{ github.sha }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.SENTRY_FRONTEND_DSN }}
+
+          # Secrets (必要に応じてStaging用Tokenに変えることも検討)
+          secrets: |
+            sentry_token=${{ secrets.SENTRY_AUTH_TOKEN }}
+
+      # 6. Deploy to Cloud Run (Frontend) - サービス名に -staging を追加
+      - name: Deploy Frontend
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: celestial-frontend-staging
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}

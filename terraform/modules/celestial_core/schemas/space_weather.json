@@ -1,0 +1,20 @@
+[
+  {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "観測時刻 (UTC)"
+  },
+  {
+    "name": "metric",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "指標名 (例: xray_flux, solar_wind_speed, imf_bz, kp_index)"
+  },
+  {
+    "name": "value",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "観測値"
+  }
+]

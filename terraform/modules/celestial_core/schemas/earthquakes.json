@@ -1,0 +1,44 @@
+[
+  {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "発生時刻 (UTC)"
+  },
+  {
+    "name": "usgs_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "USGS Event ID"
+  },
+  {
+    "name": "magnitude",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "マグニチュード"
+  },
+  {
+    "name": "place",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "発生場所"
+  },
+  {
+    "name": "depth",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "深さ (km)"
+  },
+  {
+    "name": "latitude",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "緯度"
+  },
+  {
+    "name": "longitude",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "経度"
+  }
+]
