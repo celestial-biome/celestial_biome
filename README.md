@@ -23,7 +23,6 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 
 - **Frontend (App):** https://app.celestial-biome.com
 - **Backend (API):** https://api.celestial-biome.com
-- **Admin Panel:** https://api.celestial-biome.com/admin/
 
 ### Staging (Integration / QA)
 
@@ -38,27 +37,27 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 
 | Component           | Technology            | Version     | Note                     |
 | ------------------- | --------------------- | ----------- | ------------------------ |
-| **Framework**       | Django                | **5.2 LTS** | App Config / ORM         |
+| **Framework**       | Django                | 5.2 LTS | App Config / ORM         |
 | **API**             | Django REST Framework | Latest      | API Construction         |
-| **Schema**          | drf-spectacular       | Latest      | **Swagger UI / OpenAPI 3** |
-| **Language**        | Python                | **3.12**    |                          |
-| **Pkg Manager**     | **uv**                | Latest      | **pip/poetry 使用禁止**  |
+| **Schema**          | drf-spectacular       | Latest      | Swagger UI / OpenAPI 3 |
+| **Language**        | Python                | 3.12**    |                          |
+| **Pkg Manager**     | uv                | Latest      | pip/poetry 使用禁止  |
 | **Lint/Fmt**        | Ruff                  | Latest      | Enforced by pre-commit   |
-| **Type Check** 　　　| **Ty** 　　　　　　　　　| Latest      | **Static Type Checker** |
+| **Type Check** 　　　| Ty 　　　　　　　　　| Latest      | Static Type Checker |
 | **Testing**         | pytest                | Latest      |                          |
 | **Monitoring**      | Sentry SDK (Django)   | ~2.0.0      | Runtime Error & Performance Tracking |
-| **Async**           | **Cloud Tasks**       | -           | No Celery/Redis          |
-| **Data Analysis**　 | **Pandas**            | Latest      | Data manipulation        |
+| **Async**           | Cloud Tasks       | -           | No Celery/Redis          |
+| **Data Analysis**　 | Pandas            | Latest      | Data manipulation        |
 
 ### Frontend (Client Side)
 
 | Component         | Technology         | Version     | Note                         |
 | ----------------- | ------------------ | ----------- | ---------------------------- |
-| **Framework**     | Next.js            | **16**      | App Router                   |
+| **Framework**     | Next.js            | 16      | App Router                   |
 | **Language**      | TypeScript         | 5.x         |                              |
-| **Runtime**       | Node.js            | **v22 LTS** |                              |
-| **Styling**       | Tailwind CSS       | **v4**      |                              |
-| **Lint/Fmt**      | **Biome**          | Latest      | **ESLint/Prettier 使用禁止** |
+| **Runtime**       | Node.js            | v22 LTS |                              |
+| **Styling**       | Tailwind CSS       | v4      |                              |
+| **Lint/Fmt**      | Biome          | Latest      | ESLint/Prettier 使用禁止 |
 | **Type Gen**      | openapi-typescript | Latest      | Schema Driven Dev            |
 | **Testing**       | Vitest             | Latest      | Unit & Component Testing     |
 | **Visualization** | Echarts            | 6.x         | Charts & Graphs              |
@@ -67,14 +66,14 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 
 | Component          | Technology          | Note                                     |
 | ------------------ | ------------------- | ---------------------------------------- |
-| **Domain**　　　　　　| Custom Domain 　　　| Terraform & Cloud Run Mapping 　　　　　　　|
+| **Domain**         | Custom Domain      | Terraform & Cloud Run Mapping            |
 | **Cloud**          | Google Cloud (GCP)  |                                          |
 | **Compute**        | Cloud Run           | Frontend & Backend (Standalone)          |
 | **ETL / Batch**    | Cloud Run Jobs      | Scheduled by Cloud Scheduler             |
-| **Database**       | Cloud SQL           | PostgreSQL 16 (**App Data & Data Mart**) |
-| **Data Warehouse** | BigQuery            | **Time-series data storage**             |
+| **Database**       | Cloud SQL           | PostgreSQL 16 (App Data & Data Mart**) |
+| **Data Warehouse** | BigQuery            | Time-series data storage**             |
 | **Storage**        | Cloud Storage (GCS) | Static & Media files                     |
-| **IaC**            | Terraform           | **Multi-environment management (Dev/Stage/Prod)**                |
+| **IaC**            | Terraform           | Multi-environment management (Dev/Stage/Prod)                |
 | **CI/CD**          | GitHub Actions      | CI, Build, Deploy                        |
 | **Monitoring**     | Sentry              | Error Tracking, Source Maps (Frontend)   |
 
@@ -205,9 +204,9 @@ Backend, Frontend 共に単体テスト環境が整備されています。
 
 非同期処理が必要な場合は、Celery/Redis 構成ではなく、**Google Cloud Tasks** を使用してください。
 
-### 5. Data Pipeline (Space Weather)
+### 5. Data Pipeline
 
-宇宙天気データ（NOAA SWPC）を収集・蓄積し、可視化するパイプラインを構築しています。
+データを収集・蓄積し、可視化するパイプラインを構築しています。
 **Data Warehouse (BigQuery)** と **Data Mart (Cloud SQL)** を分離することで、分析用データの蓄積と Web アプリの高速応答を両立させています。
 
 ```mermaid
@@ -252,7 +251,7 @@ graph LR
     Frontend -- "HTTPS (JSON)" --> Backend
     Backend -- "Query (Fast)" --> SQL
 ```
-
+**参考（NOAA Space Weather）**
 1.  **Ingestion (ETL)**: Cloud Run Job (`ingest_space_weather`) が NOAA からデータを取得し、**BigQuery** に蓄積 (毎時 0 分実行)。
 2.  **Sync (Data Mart)**: Cloud Run Job (`sync_bq_to_db`) が BigQuery から直近 7 日分のデータを集計・取得し、**Cloud SQL** の専用テーブルに洗い替え (毎時 5 分実行)。
     - **Transaction**: データの不整合を防ぐため、`transaction.atomic` を用いて全削除・一括挿入（Bulk Create）を安全に行います。
@@ -358,15 +357,13 @@ gitGraph
 このグラフは以下の開発サイクルを表しています：
 
 1.  **Feature Development**: `feature` ブランチ等で開発を行います。
-2.  **Staging Deployment**: `staging` ブランチへマージ（またはプッシュ）すると、GitHub Actions が **Staging 環境** へデプロイを実行します。ここで動作確認を行います。
-3.  **Production Deployment**: Staging での検証が完了した後、`main` ブランチへマージすると、GitHub Actions が **Production 環境** へデプロイを実行します。
-
-1.  **Staging Deployment**:
+2.  **Staging Deployment**:
+`staging` ブランチへマージ（またはプッシュ）すると、GitHub Actions が **Staging 環境** へデプロイを実行します。ここで動作確認を行います。
     - Trigger: `staging` ブランチへの Push
     - Action: Staging 環境 (Cloud Run / DB / Job) へデプロイ
     - Purpose: 統合テスト、UI/UX確認、データ移行の事前検証
-
-2.  **Production Deployment**:
+3.  **Production Deployment**:
+Staging での検証が完了した後、`main` ブランチへマージすると、GitHub Actions が **Production 環境** へデプロイを実行します。
     - Trigger: `main` ブランチへの Push (Staging での検証完了後)
     - Action: Production 環境へデプロイ
     - Purpose: 本番リリース
