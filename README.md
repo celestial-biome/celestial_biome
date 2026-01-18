@@ -17,11 +17,18 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 
 ## 🌍 Production Environment
 
-本番環境は以下の URL で稼働しています。
+本プロジェクトは、開発の安全性と品質を担保するため、**Staging** と **Production** の完全分離構成を採用しています。
+
+### Production (Stable)
 
 - **Frontend (App):** https://app.celestial-biome.com
 - **Backend (API):** https://api.celestial-biome.com
 - **Admin Panel:** https://api.celestial-biome.com/admin/
+
+### Staging (Integration / QA)
+
+- **Frontend (App):** https://app-staging.celestial-biome.com
+- **Backend (API):** https://api-staging.celestial-biome.com
 
 ## 🏗 Architecture & Tech Stack
 
@@ -67,7 +74,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Database**       | Cloud SQL           | PostgreSQL 16 (**App Data & Data Mart**) |
 | **Data Warehouse** | BigQuery            | **Time-series data storage**             |
 | **Storage**        | Cloud Storage (GCS) | Static & Media files                     |
-| **IaC**            | Terraform           | Infrastructure management                |
+| **IaC**            | Terraform           | **Multi-environment management (Dev/Stage/Prod)**                |
 | **CI/CD**          | GitHub Actions      | CI, Build, Deploy                        |
 | **Monitoring**     | Sentry              | Error Tracking, Source Maps (Frontend)   |
 
@@ -301,13 +308,61 @@ drf-spectacular により、OpenAPI 仕様書とインタラクティブなド�
 
 ### Deployment
 
-GitHub Actions により、`main` ブランチへのプッシュで自動的に Build と Cloud Run への Deploy が行われます。　　
+GitHub Actions と Terraform を連携させた、Git-Flow ベースの CI/CD パイプラインを構築しています。
 
-CI/CD Pipeline Feature:
-1. Secure Backend ConnectionL:
-Frontend から Backend への接続は、相互に認証されたカスタムドメイン (`api.celestial-biome.com`) を介して行われます。Backend 側では `ALLOWED_HOSTS` によりこのドメイン以外からのアクセスを遮断し、セキュリティを強化しています。
-2. Sentry Release Automation:
-ビルド時に Sentry CLI を実行し、ソースマップ（Source Maps）を自動的にアップロードしています。これにより、本番環境で発生したエラーを Minify 前の元のソースコード行で特定・デバッグすることが可能です。
+### Deployment Workflow
+
+```mermaid
+gitGraph
+   commit id: "Initial"
+   branch staging
+   commit id: "Staging Init"
+   branch dev
+   commit id: "Dev Init"
+
+   %% Feature Development
+   branch feature/new-metric
+   checkout feature/new-metric
+   commit id: "Add Solar Wind"
+   commit id: "Fix Typos"
+
+   %% Merge to Staging (Triggers Staging Deploy)
+   checkout staging
+   merge feature/new-metric tag: "v1.0.0-rc1" type: HIGHLIGHT
+   commit id: "Auto-Deploy Staging"
+
+   %% Verification & Merge to Main (Triggers Prod Deploy)
+   checkout main
+   merge staging tag: "v1.0.0" type: HIGHLIGHT
+   commit id: "Auto-Deploy Prod"
+
+   %% Hotfix Flow (Optional example)
+   checkout staging
+   commit id: "Hotfix"
+   checkout main
+   merge staging tag: "v1.0.1" type: HIGHLIGHT
+   ```
+
+   ### グラフの解説（README本文への補足案）
+
+このグラフは以下の開発サイクルを表しています：
+
+1.  **Feature Development**: `feature` ブランチ等で開発を行います。
+2.  **Staging Deployment**: `staging` ブランチへマージ（またはプッシュ）すると、GitHub Actions が **Staging 環境** へデプロイを実行します。ここで動作確認を行います。
+3.  **Production Deployment**: Staging での検証が完了した後、`main` ブランチへマージすると、GitHub Actions が **Production 環境** へデプロイを実行します。
+
+1.  **Staging Deployment**:
+    - Trigger: `staging` ブランチへの Push
+    - Action: Staging 環境 (Cloud Run / DB / Job) へデプロイ
+    - Purpose: 統合テスト、UI/UX確認、データ移行の事前検証
+
+2.  **Production Deployment**:
+    - Trigger: `main` ブランチへの Push (Staging での検証完了後)
+    - Action: Production 環境へデプロイ
+    - Purpose: 本番リリース
+
+### Canonical URL Redirects (SEO & UX)
+Cloud Run のデフォルトドメイン (`*.run.app`) への直接アクセスは、Middleware により自動的に正規カスタムドメイン（`app.celestial-biome.com` 等）へ 301 リダイレクトされます。
 
 ### Monitoring & Observability
 
@@ -317,31 +372,29 @@ Sentry を活用し、Frontend / Backend 双方で包括的な監視体制を構
 * **Frontend:** ビルドパイプライン（CI/CD）でソースマップを自動アップロードし、Minify されたコードを復元してエラー箇所を特定可能にしています。
 * **Backend:** `sentry-sdk` の Django 統合を使用し、実行時エラーのスタックトレース収集と、API レスポンスタイムのパフォーマンストレースを実施しています。
 
-### Database Migration (Production)
+### Database Migration
+DB マイグレーションは Terraform で定義された Cloud Run Jobs を使用して実行します。
+Staging / Production それぞれの環境に対し、以下のコマンドで適用可能です。
 
-本番環境 (Cloud SQL) へのマイグレーションは、Cloud Run Jobs を使用して安全に実行します。
+```bash
+# Production
+gcloud run jobs execute migrate-job --region asia-northeast1
 
-```text
-# 実行例 (変数は環境に合わせて設定)
-
-gcloud run jobs deploy migrate-db \
- --image $IMAGE \
-  --region $REGION \
-  --set-cloudsql-instances $INSTANCE_CONNECTION_NAME \
-  --set-env-vars DB_NAME=celestial_db \
-  --set-env-vars DB_USER=celestial_user \
-  --set-env-vars GCP_PROJECT_ID=$PROJECT_ID \
- --command "python,manage.py,migrate" \
- --execute-now
+# Staging
+gcloud run jobs execute migrate-job-staging --region asia-northeast1
 ```
 
 ### Superuser Creation
+管理ユーザー (Superuser) の作成も、専用の Cloud Run Job として定義済みです。 パスワードは Terraform で自動生成され、Secret Manager で管理されています。
 
-管理ユーザーの作成も同様に Cloud Run Jobs 経由で行います。
+```bash
+# Production
+gcloud run jobs execute create-superuser-job --region asia-northeast1
 
-```text
-gcloud run jobs deploy create-superuser \
- --image $IMAGE \
- --command "python,manage.py,createsuperuser,--noinput" \
- --execute-now
+# Staging
+gcloud run jobs execute create-superuser-job-staging --region asia-northeast1
+
+※ パスワードの確認方法:
+gcloud secrets versions access latest --secret="admin-password" --project=$PROJECT_ID
+
 ```
