@@ -205,7 +205,7 @@ resource "google_cloud_run_v2_service" "backend" {
       # Djangoが "400 Bad Request" を返してブロックします。
       env {
         name  = "ALLOWED_HOSTS"
-        value = "api.celestial-biome.com,localhost,127.0.0.1"
+        value = var.env_name == "production" ? "api.celestial-biome.com,localhost,127.0.0.1" : "api-staging.celestial-biome.com,localhost,127.0.0.1"
       }
       env {
         name  = "DEBUG"
@@ -232,6 +232,12 @@ resource "google_cloud_run_v2_service" "backend" {
             version = "latest"
           }
         }
+      }
+      # フロントエンドのURLを渡す (CORS設定用)
+      # Django側でこれを受け取って CORS_ALLOWED_ORIGINS に追加
+      env {
+        name  = "FRONTEND_URL"
+        value = var.env_name == "production" ? "https://app.celestial-biome.com" : "https://app-staging.celestial-biome.com"
       }
       # Sentry関連の環境変数
       env {
@@ -299,6 +305,11 @@ resource "google_cloud_run_v2_service" "frontend" {
       env {
         name  = "SENTRY_ENVIRONMENT"
         value = "development"
+      }
+      # この環境の正規URLを渡す（staging か prod で動的に変更）
+      env {
+        name  = "CANONICAL_URL"
+        value = var.env_name == "production" ? "https://app.celestial-biome.com" : "https://app-staging.celestial-biome.com"
       }
     }
   }

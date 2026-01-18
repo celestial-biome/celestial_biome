@@ -2,33 +2,39 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // ホストヘッダーを取得 (例: celestial-frontend-xxx.run.app)
-  const host = request.headers.get('host');
+  // Terraformから渡される正規URL (例: https://app-staging.celestial-biome.com)
+  const canonicalUrlStr = process.env.CANONICAL_URL;
 
-  // 環境変数が production、かつ host が存在し、'.run.app' を含んでいる場合
-  if (process.env.NODE_ENV === 'production' && host?.includes('.run.app')) {
-    // リダイレクト先のURLを構築
-    // request.nextUrl.pathname でパス（/earthquake 等）を引き継ぎます
-    const newUrl = new URL(`https://app.celestial-biome.com${request.nextUrl.pathname}`);
-
-    // 301リダイレクト (恒久的な移動) を返す
-    return NextResponse.redirect(newUrl, 301);
+  // CANONICAL_URL が設定されていない場合（ローカル開発など）は何もしない
+  if (!canonicalUrlStr) {
+    return NextResponse.next();
   }
 
-  // それ以外はそのまま処理を続行
+  const host = request.headers.get('host');
+
+  try {
+    const canonicalUrl = new URL(canonicalUrlStr);
+    const canonicalHost = canonicalUrl.host;
+
+    // 現在のホストが正規ホストと異なり、かつ localhost でない場合
+    // (例: *.run.app へのアクセスや、誤ったドメインからのアクセスを補足)
+    if (host && host !== canonicalHost && !host.includes('localhost')) {
+      // リダイレクト先のURLを構築
+      // パス (request.nextUrl.pathname) と クエリ (request.nextUrl.search) を引き継ぐ
+      const newUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, canonicalUrlStr);
+
+      // 301リダイレクト (恒久的な移動) を返す
+      return NextResponse.redirect(newUrl, 301);
+    }
+  } catch (error) {
+    // 万が一 CANONICAL_URL が不正な形式だった場合のエラーハンドリング
+    console.error('Middleware Error: Invalid CANONICAL_URL', error);
+  }
+
   return NextResponse.next();
 }
 
-// マッチャー設定: 静的ファイルやAPI、Next.js内部ファイルはチェック対象から外して負荷を下げる
+// マッチャー設定: 静的ファイルやAPI、Next.js内部ファイルはチェック対象から外す
 export const config = {
-  matcher: [
-    /*
-     * 以下のパスで始まるもの以外 ("missing" logic) 全てにマッチさせる:
-     * - api (APIルート) -> ただし、run.app経由のAPIアクセスもリダイレクトしたい場合はここから 'api' を外してください
-     * - _next/static (静的ファイル)
-     * - _next/image (画像最適化ファイル)
-     * - favicon.ico (ファビコン)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

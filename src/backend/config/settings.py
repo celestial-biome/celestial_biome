@@ -158,16 +158,21 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # WhiteNoiseを使って圧縮・キャッシュを行う設定
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# 環境変数からフロントエンドのURLを取得 (Terraformで設定)
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+
 # 本番のNext.jsのURLと、ローカル開発のURLを許可
 CORS_ALLOWED_ORIGINS = [
-    "https://app.celestial-biome.com",
+    FRONTEND_URL,  # 環境変数から動的に追加
     "http://localhost:3000",
 ]
 
 # CSRF設定: 新しいドメインでの管理画面ログインを許可
 CSRF_TRUSTED_ORIGINS = [
-    "https://app.celestial-biome.com",
-    "https://api.celestial-biome.com",
+    FRONTEND_URL,  # Frontend (app-...)
+    f"https://{ALLOWED_HOSTS[0]}",  # Backend自身 (api-...) も許可しておくと安心
+    "https://api.celestial-biome.com",  # 本番 (念のため維持)
+    "https://api-staging.celestial-biome.com",  # Staging (念のため維持)
 ]
 
 # Django REST Framework の設定
