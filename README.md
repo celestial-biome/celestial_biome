@@ -343,7 +343,7 @@ gitGraph
    merge staging tag: "v1.0.1" type: HIGHLIGHT
    ```
 
-   ### グラフの解説（README本文への補足案）
+   ### グラフの解説
 
 このグラフは以下の開発サイクルを表しています：
 
