@@ -212,35 +212,45 @@ Backend, Frontend 共に単体テスト環境が整備されています。
 
 ```mermaid
 graph LR
-subgraph External[External Data Source]
-NOAA[NOAA SWPC API]
-end
+    subgraph External[External Data Sources]
+        direction TB
+        NOAA["NOAA SWPC<br>(Space Weather)"]
+        USGS["USGS<br>(Earthquakes)"]
+        Econ["Yahoo Finance /<br>World Bank (Economy)"]
+    end
 
     subgraph GCP[Google Cloud Platform]
-        subgraph Compute[Compute & Orchestration]
+        subgraph Orchestration
             Scheduler[Cloud Scheduler]
-            Job_Ingest[Cloud Run Job<br>Ingest]
-            Job_Sync[Cloud Run Job<br>Sync]
-            Backend[Cloud Run Service<br>Django API]
-            Frontend[Cloud Run Service<br>Next.js UI]
+        end
+
+        subgraph Compute[Compute & ETL]
+            direction TB
+            Ingest_Jobs["Cloud Run Jobs<br>Ingest Pipelines"]
+            Sync_Jobs["Cloud Run Jobs<br>Sync Pipelines"]
+            Backend["Cloud Run Service<br>Django API"]
+            Frontend["Cloud Run Service<br>Next.js UI"]
         end
 
         subgraph Storage[Data Storage]
-            BQ[(BigQuery<br>Data Warehouse)]
-            SQL[(Cloud SQL<br>PostgreSQL<br>Data Mart)]
+            BQ[("BigQuery<br>Data Warehouse")]
+            SQL[("Cloud SQL<br>PostgreSQL<br>Data Mart")]
         end
     end
 
-    Scheduler -- Trigger (Hourly :00) --> Job_Ingest
-    Job_Ingest -- 1. Fetch JSON --> NOAA
-    Job_Ingest -- 2. Store Raw Data --> BQ
+    %% Scheduling
+    Scheduler -- "Trigger (Various Schedules)" --> Ingest_Jobs
+    Scheduler -- "Trigger (Post-Ingest)" --> Sync_Jobs
 
-    Scheduler -- Trigger (Hourly :05) --> Job_Sync
-    Job_Sync -- 3. Query (Aggregated) --> BQ
-    Job_Sync -- 4. Upsert (Refresh) --> SQL
+    %% Data Flow (ETL)
+    NOAA & USGS & Econ -. "Fetch API" .-> Ingest_Jobs
+    Ingest_Jobs -- "Store Raw Data" --> BQ
+    Sync_Jobs -- "Query Aggregates" --> BQ
+    Sync_Jobs -- "Upsert (Refresh)" --> SQL
 
-    Frontend -- 5. Request API --> Backend
-    Backend -- 6. Query (Fast) --> SQL
+    %% Application Flow
+    Frontend -- "HTTPS (JSON)" --> Backend
+    Backend -- "Query (Fast)" --> SQL
 ```
 
 1.  **Ingestion (ETL)**: Cloud Run Job (`ingest_space_weather`) が NOAA からデータを取得し、**BigQuery** に蓄積 (毎時 0 分実行)。
