@@ -7,6 +7,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 6.0"
     }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 6.0"
+    }
     sentry = {
       source  = "jianyuan/sentry"
       version = "~> 0.11"
@@ -17,6 +21,15 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
+}
+
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
+  user_project_override = true
+
+  # 課金プロジェクトを明示的に指定して、迷子になるのを防ぎます
+  billing_project       = var.project_id
 }
 
 provider "sentry" {}
@@ -43,6 +56,11 @@ variable "sentry_org" {
 # モジュールの呼び出し (Staging設定)
 module "core" {
   source = "../../modules/celestial_core"
+
+  providers = {
+    google = google
+    google-beta = google-beta
+  }
 
   # 基本変数
   project_id  = var.project_id

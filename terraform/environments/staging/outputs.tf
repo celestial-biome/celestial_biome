@@ -21,3 +21,9 @@ output "domain_mapping_records" {
 output "backend_domain_mapping_records" {
   value = module.core.domain_mapping_records_backend
 }
+
+output "firebase_config" {
+  description = "Firebase configuration for Frontend"
+  value       = module.core.firebase_config
+  sensitive   = true
+}

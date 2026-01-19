@@ -8,6 +8,12 @@ terraform {
       version = "~> 6.0"
     }
 
+    # Google Beta (Firebase Auth等で使用)
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 6.0"
+    }
+
     # 2. Random (ID生成用)
     random = {
       source  = "hashicorp/random"
