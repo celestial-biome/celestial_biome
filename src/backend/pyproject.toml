@@ -24,6 +24,7 @@ dependencies = [
     "wbgapi>=1.0.12",
     "whitenoise>=6.11.0",
     "yfinance>=1.0",
+    "firebase-admin>=7.1.0",
 ]
 
 [dependency-groups]

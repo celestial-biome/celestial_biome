@@ -136,22 +136,22 @@ export function nearestY(points: XY[], x: number): number | null {
   let lo = 0;
   let hi = points.length - 1;
 
-  if (x <= points[0]![0]) return points[0]![1];
-  if (x >= points[hi]![0]) return points[hi]![1];
+  if (x <= points[0]?.[0]) return points[0]?.[1];
+  if (x >= points[hi]?.[0]) return points[hi]?.[1];
 
   while (lo <= hi) {
     const mid = (lo + hi) >> 1;
-    const t = points[mid]![0];
-    if (t === x) return points[mid]![1];
+    const t = points[mid]?.[0];
+    if (t === x) return points[mid]?.[1];
     if (t < x) lo = mid + 1;
     else hi = mid - 1;
   }
 
   const left = Math.max(0, hi);
   const right = Math.min(points.length - 1, lo);
-  const dl = Math.abs(points[left]![0] - x);
-  const dr = Math.abs(points[right]![0] - x);
-  return dl <= dr ? points[left]![1] : points[right]![1];
+  const dl = Math.abs(points[left]?.[0] - x);
+  const dr = Math.abs(points[right]?.[0] - x);
+  return dl <= dr ? points[left]?.[1] : points[right]?.[1];
 }
 
 export function bandIdFromXray(v: number | null): (typeof XRAY_BANDS)[number]['id'] | null {

@@ -10,6 +10,7 @@ urlpatterns = [
     path("api/v1/astronomy/", include("astronomy.urls")),
     path("api/v1/geology/", include("geology.urls")),
     path("api/v1/economy/", include("economy.urls")),
+    path("api/v1/auth/", include("accounts.urls")),
 ]
 
 # Swagger関連の定義

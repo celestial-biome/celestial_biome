@@ -16,10 +16,11 @@ const getMarker = (color: string) =>
 
 // --- 1. 世界震源マップ ---
 export const getMapOption = (data: Earthquake[]): EChartsOption => ({
-  animation: false, // ★ ここに追加（アニメーション無効化）
+  animation: false, // （アニメーション無効化）
   backgroundColor: 'transparent',
   tooltip: {
     ...baseTooltip,
+    // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
     formatter: (params: any) => {
       const { name, data: item } = params;
       return `
@@ -58,8 +59,10 @@ export const getMapOption = (data: Earthquake[]): EChartsOption => ({
         depth: d.depth,
         ts: d.timestamp,
       })),
+      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
       symbolSize: (val: any) => Math.max(3, val[2] ** 2.8 / 3),
       itemStyle: {
+        // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
         color: (params: any) => {
           const m = params.data.mag;
           return m >= 6 ? '#ef4444' : m >= 4.5 ? '#f97316' : '#22d3ee';
@@ -82,7 +85,7 @@ export const getMagHistOption = (data: Earthquake[]): EChartsOption => {
   }
 
   return {
-    animation: false, // ★ ここに追加
+    animation: false,
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
@@ -112,9 +115,10 @@ export const getMagHistOption = (data: Earthquake[]): EChartsOption => {
 
 // --- 3. 深さ vs マグニチュード (日時追加 & スライダー非表示) ---
 export const getDepthScatterOption = (data: Earthquake[]): EChartsOption => ({
-  animation: false, // ★ ここに追加
+  animation: false,
   tooltip: {
     ...baseTooltip,
+    // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
     formatter: (p: any) => {
       // data: [depth, mag, place, timestamp]
       const depth = p.value[0];
@@ -153,7 +157,7 @@ export const getDepthScatterOption = (data: Earthquake[]): EChartsOption => ({
     axisLabel: { color: '#a1a1aa' },
   },
   visualMap: {
-    show: false, // ★ スライダー自体は非表示にする (色は適用される)
+    show: false, //スライダー自体は非表示にする (色は適用される)
     type: 'continuous',
     dimension: 1,
     min: 2.5,
@@ -183,7 +187,7 @@ export const getDepthScatterOption = (data: Earthquake[]): EChartsOption => ({
 
 // --- 4. 地域別ランキング ---
 export const getRegionRankOption = (rankingData: [string, number][]): EChartsOption => ({
-  animation: false, // ★ ここに追加
+  animation: false,
   tooltip: {
     trigger: 'axis',
     ...baseTooltip,
@@ -231,7 +235,7 @@ export const getTimeSeriesOption = (stackedData: StackedSeriesData): EChartsOpti
   tooltip: {
     trigger: 'item', // ピンポイント表示
     ...baseTooltip,
-
+    // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
     formatter: (params: any) => {
       const color = params.color;
       const regionName = params.seriesName;

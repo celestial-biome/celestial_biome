@@ -1,4 +1,10 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { fetchWithAuth } from '@/lib/api-client';
+
 import EarthquakeDashboard from './components/earthquake';
 import type { Earthquake } from './components/earthquake/utils';
 import SpaceWeatherDashboard from './components/space-weather';
@@ -6,155 +12,157 @@ import type { WeatherData } from './components/space-weather/utils';
 import WorldEconomyDashboard from './components/world-economy';
 import type { EconomyApiResponse } from './components/world-economy/utils';
 
-// トップページも1時間キャッシュ (必要に応じて調整)
-export const revalidate = 3600;
+export default function Home() {
+  const { loading: authLoading } = useAuth();
 
-// API URLの取得 (共通ロジック)
-const getApiUrl = () =>
-  process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const [economyData, setEconomyData] = useState<EconomyApiResponse | null>(null);
+  const [spaceWeatherData, setSpaceWeatherData] = useState<WeatherData[] | null>(null);
+  const [earthquakes, setEarthquakes] = useState<Earthquake[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
 
-// 1. World Economy データ取得ロジック
-async function getEconomyData(): Promise<EconomyApiResponse | null> {
-  try {
-    const res = await fetch(`${getApiUrl()}/api/v1/economy/world-economy/`, {
-      next: { revalidate: 3600 },
-    });
+  useEffect(() => {
+    if (authLoading) return;
 
-    if (!res.ok) return null;
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching economy data:', error);
-    return null;
-  }
-}
+    const fetchData = async () => {
+      setLoadingData(true);
+      try {
+        const [economyRes, spaceRes, quakeRes] = await Promise.allSettled([
+          fetchWithAuth('/api/v1/economy/world-economy/'),
+          fetchWithAuth('/api/v1/astronomy/space-weather/?days=30'),
+          fetchWithAuth('/api/v1/geology/earthquakes/?days=30'),
+        ]);
 
-// 2. Space Weather データ取得ロジック
-async function getSpaceWeatherData(): Promise<WeatherData[] | null> {
-  try {
-    // 過去30日分のデータを取得する
-    const res = await fetch(`${getApiUrl()}/api/v1/astronomy/space-weather/?days=30`, {
-      next: { revalidate: 3600 },
-    });
+        if (economyRes.status === 'fulfilled') setEconomyData(await economyRes.value.json());
+        if (spaceRes.status === 'fulfilled') setSpaceWeatherData(await spaceRes.value.json());
+        if (quakeRes.status === 'fulfilled') setEarthquakes(await quakeRes.value.json());
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoadingData(false);
+      }
+    };
 
-    if (!res.ok) return null;
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching space weather data:', error);
-    return null;
-  }
-}
-
-// 3. Earthquake データ取得ロジック
-async function getEarthquakeData(): Promise<Earthquake[] | null> {
-  try {
-    // 過去30日分のデータを取得する
-    const res = await fetch(`${getApiUrl()}/api/v1/geology/earthquakes/?days=30`, {
-      next: { revalidate: 3600 },
-    });
-
-    if (!res.ok) return null;
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching earthquake data:', error);
-    return null;
-  }
-}
-
-// async function に変更してサーバーサイドでデータ待機可能にする
-export default async function Home() {
-  // 並列でデータを取得して待機
-  const [economyData, spaceWeatherData, earthquakeData] = await Promise.all([
-    getEconomyData(),
-    getSpaceWeatherData(),
-    getEarthquakeData(),
-  ]);
+    fetchData();
+  }, [authLoading]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-black text-white">
-      <header className="mb-10 text-center z-10">
-        <h1 className="text-4xl font-mono font-bold tracking-tight mb-2">Celestial Biome</h1>
-        <p className="text-gray-400">Environmental Monitoring Portal</p>
-      </header>
+    // ヘッダー分(64px)を引いた高さにし、Flexboxで垂直中央揃えにする
+    <main className="min-h-[calc(100vh-64px)] bg-gray-950 flex flex-col justify-center relative overflow-hidden">
+      {/* 背景の装飾 (微かな光のオーブ) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl opacity-30 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-900/40 rounded-full blur-[128px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-900/40 rounded-full blur-[128px]" />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl z-10">
-        {/* 宇宙天気プレビューカード */}
-        <PreviewCard
-          href="/space-weather"
-          title="Space Weather"
-          description="Solar & Geomagnetic Activity"
-          colorClass="border-yellow-500/30 hover:border-yellow-400 hover:shadow-[0_0_40px_rgba(234,179,8,0.2)]"
-        >
-          {/* 取得したデータを渡す */}
-          <SpaceWeatherDashboard initialData={spaceWeatherData} />
-        </PreviewCard>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full relative z-10">
+        {/* タイトル周りの余白を広げ、サブタイトルを追加してバランスをとる */}
+        <div className="text-center mb-16">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-purple-100 mb-6 tracking-tight drop-shadow-sm">
+            Celestial Biome Portal
+          </h1>
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto font-light">
+            Visualize the rhythm of the planet and cosmos. <br className="hidden sm:inline" />
+            Monitor real-time data from economic, geological, and astronomical sources.
+          </p>
+        </div>
 
-        {/* 地震情報プレビューカード */}
-        <PreviewCard
-          href="/earthquake"
-          title="Earthquake Monitor"
-          description="Global Seismic Data"
-          colorClass="border-blue-500/30 hover:border-blue-400 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)]"
-        >
-          {/* 取得したデータを渡す */}
-          <EarthquakeDashboard initialData={earthquakeData} />
-        </PreviewCard>
+        {(authLoading || loadingData) && (
+          <div className="text-center py-10 text-gray-500 animate-pulse">
+            Loading Celestial Data...
+          </div>
+        )}
 
-        {/* 世界経済プレビューカード */}
-        <PreviewCard
-          href="/world-economy"
-          title="World Economy"
-          description="Global Economic Data"
-          colorClass="border-blue-500/30 hover:border-blue-400 hover:shadow-[0_0_40px_rgba(59,130,246,0.2)]"
-        >
-          {/* 取得したデータを渡す */}
-          <WorldEconomyDashboard initialData={economyData} />
-        </PreviewCard>
+        {/* カード間のギャップを少し広げる (gap-8 -> gap-10) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <LinkCard
+            href="/world-economy"
+            title="World Economy"
+            description="Global economic indicators and trends visualization."
+            colorClass="border-blue-500/30 text-blue-400"
+          >
+            {economyData ? (
+              <div className="h-full w-full pointer-events-none select-none">
+                <WorldEconomyDashboard initialData={economyData} />
+              </div>
+            ) : (
+              !loadingData && (
+                <div className="flex h-full items-center justify-center text-gray-500">No Data</div>
+              )
+            )}
+          </LinkCard>
+
+          <LinkCard
+            href="/space-weather"
+            title="Space Weather"
+            description="Solar activity and geomagnetic storm monitoring."
+            colorClass="border-orange-500/30 text-orange-400"
+          >
+            {spaceWeatherData && spaceWeatherData.length > 0 ? (
+              <div className="h-full w-full pointer-events-none select-none">
+                <SpaceWeatherDashboard initialData={spaceWeatherData} />
+              </div>
+            ) : (
+              !loadingData && (
+                <div className="flex h-full items-center justify-center text-gray-500">No Data</div>
+              )
+            )}
+          </LinkCard>
+
+          <LinkCard
+            href="/earthquake"
+            title="Earthquake Monitor"
+            description="Real-time seismic activity and magnitude tracking."
+            colorClass="border-red-500/30 text-red-400"
+          >
+            {earthquakes && earthquakes.length > 0 ? (
+              <div className="h-full w-full pointer-events-none select-none">
+                <EarthquakeDashboard initialData={earthquakes} />
+              </div>
+            ) : (
+              !loadingData && (
+                <div className="flex h-full items-center justify-center text-gray-500">No Data</div>
+              )
+            )}
+          </LinkCard>
+        </div>
       </div>
     </main>
   );
 }
 
-// ---------------------------------------------------------
-// ミニチュア表示用のラッパーコンポーネント
-// ---------------------------------------------------------
-function PreviewCard({
+// LinkCard は変更なし (前回のまま)
+function LinkCard({
   href,
   title,
-  children,
   description,
+  children,
   colorClass,
 }: {
   href: string;
   title: string;
-  children: React.ReactNode;
   description: string;
+  children: React.ReactNode;
   colorClass: string;
 }) {
   return (
     <Link
       href={href}
-      className="group block h-[400px] w-full relative overflow-hidden rounded-2xl border bg-gray-950 transition-all duration-300 transform hover:-translate-y-1"
+      className="group block h-[400px] w-full relative overflow-hidden rounded-2xl border bg-gray-950 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-900/10"
     >
-      {/* コンテンツのスケーリングエリア */}
       <div
         className={`
         absolute inset-0 pointer-events-none overflow-hidden opacity-80 group-hover:opacity-100 transition-opacity duration-500
         ${colorClass} border-b-0 border-x-0 rounded-t-2xl
       `}
       >
-        {/* 仮想的なスクリーンを作り、それをカードサイズに合わせて縮小します。 */}
         <div className="origin-top-left transform scale-[0.35] w-[285%] h-[285%] p-4 bg-gray-900/50">
           {children}
         </div>
       </div>
-
-      {/* グラデーションオーバーレイ */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none" />
-
-      {/* テキスト情報 */}
       <div
         className={`
-        absolute bottom-0 left-0 right-0 p-6 border-t backdrop-blur-sm
+        absolute bottom-0 left-0 right-0 p-6 border-t backdrop-blur-sm bg-gray-950/80
         ${colorClass}
       `}
       >
@@ -163,11 +171,24 @@ function PreviewCard({
             <h2 className="text-2xl font-mono font-bold text-white group-hover:text-yellow-100/90 transition-colors">
               {title}
             </h2>
-            <p className="text-sm text-gray-400 mt-1">{description}</p>
+            <p className="text-sm text-gray-400 mt-2 line-clamp-2">{description}</p>
           </div>
-          <span className="text-2xl opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-            →
-          </span>
+          <div className="transform translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+            <svg
+              aria-hidden="true"
+              className="w-6 h-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 8l4 4m0 0l-4 4m4-4H3"
+              />
+            </svg>
+          </div>
         </div>
       </div>
     </Link>

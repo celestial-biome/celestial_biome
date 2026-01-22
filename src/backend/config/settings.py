@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "astronomy.apps.AstronomyConfig",
     "geology.apps.GeologyConfig",
     "economy.apps.EconomyConfig",
+    "accounts.apps.AccountsConfig",
 ]
 
 MIDDLEWARE = [
@@ -179,6 +180,16 @@ CSRF_TRUSTED_ORIGINS = [
 REST_FRAMEWORK = {
     # スキーマ生成クラスとして drf-spectacular を指定
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # 認証クラスの設定
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        # 作成したFirebase認証クラスを最優先にする
+        "config.authentication.FirebaseAuthentication",
+    ],
+    # デフォルトの権限設定
+    "DEFAULT_PERMISSION_CLASSES": [
+        # デフォルトで閲覧はだれでも可能
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
 }
 
 # drf-spectacular の設定

@@ -52,6 +52,8 @@ services:
       - node_modules_data:/app/node_modules
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       # Docker内部ネットワークでのBackendアドレス
       - INTERNAL_API_URL=http://backend:8000
