@@ -28,7 +28,7 @@ jobs:
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
-          # ★修正: Staging用のWIFプロバイダーを指定する必要があります
+          # Staging用のWIFプロバイダーを指定する必要があります
           # 形式: projects/{PROJECT_NUMBER}/locations/global/workloadIdentityPools/celestial-pool-staging/providers/gh-provider-cloudshell
           # ※ PROJECT_NUMBER が必要です。わからない場合は `gcloud projects describe celestial-biome-480601` で確認するか、Secretsに入れてください。
           workload_identity_provider: ${{ secrets.STAGING_WIF_PROVIDER }}

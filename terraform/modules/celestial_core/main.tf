@@ -422,6 +422,7 @@ resource "google_firebase_web_app" "frontend" {
 data "google_firebase_web_app_config" "frontend" {
   provider   = google-beta
   web_app_id = google_firebase_web_app.frontend.app_id
+  project    = var.project_id
 }
 
 # Identity Platform (Auth) の設定
