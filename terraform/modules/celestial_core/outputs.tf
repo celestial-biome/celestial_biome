@@ -30,3 +30,16 @@ output "db_password_secret_id" {
 output "wif_provider_name" {
   value = google_iam_workload_identity_pool_provider.github_provider.name
 }
+
+output "firebase_config" {
+  description = "Firebase configuration for Frontend"
+  sensitive   = true # API Keyが含まれるためsensitive推奨ですが、Web API Keyは公開情報扱いです
+  value = {
+    api_key             = data.google_firebase_web_app_config.frontend.api_key
+    auth_domain         = data.google_firebase_web_app_config.frontend.auth_domain
+    project_id          = var.project_id
+    storage_bucket      = data.google_firebase_web_app_config.frontend.storage_bucket
+    messaging_sender_id = data.google_firebase_web_app_config.frontend.messaging_sender_id
+    app_id              = google_firebase_web_app.frontend.app_id
+  }
+}

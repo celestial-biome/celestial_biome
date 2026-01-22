@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import WorldEconomyDashboard from '../components/world-economy';
 import type { EconomyApiResponse } from '../components/world-economy/utils';
 
@@ -33,12 +32,6 @@ export default async function WorldEconomyPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 bg-black text-white">
-      <div className="w-full max-w-5xl mb-8 flex items-center">
-        <Link href="/" className="text-sm text-gray-400 hover:text-white transition-colors">
-          ← Back to Portal
-        </Link>
-      </div>
-
       <div className="w-full max-w-5xl">
         <h1 className="text-3xl font-bold mb-6 font-mono">World Economy Dashboard</h1>
         <WorldEconomyDashboard initialData={data} />

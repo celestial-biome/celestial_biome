@@ -61,6 +61,7 @@ export const getXrayOption = (data: XY[]): EChartsOption => {
     grid: { left: 40, right: 20, top: 10, bottom: 14 },
     tooltip: {
       ...tooltip,
+      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const ts = p?.value?.[0];
@@ -128,6 +129,7 @@ export const getWindOption = (data: XY[]): EChartsOption => {
     grid: { left: 40, right: 10, top: 10, bottom: 14 },
     tooltip: {
       ...tooltip,
+      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const ts = p?.value?.[0];
@@ -166,6 +168,7 @@ export const getBzOption = (data: XY[]): EChartsOption => {
     grid: { left: 40, right: 10, top: 10, bottom: 14 },
     tooltip: {
       ...tooltip,
+      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const ts = p?.value?.[0];
@@ -210,6 +213,7 @@ export const getKpOption = (data: XY[]): EChartsOption => {
     grid: { left: 40, right: 10, top: 10, bottom: 40 },
     tooltip: {
       ...tooltip,
+      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
       formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         const ts = p?.value?.[0];

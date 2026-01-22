@@ -7,6 +7,8 @@ resource "google_project_service" "apis" {
     "cloudresourcemanager.googleapis.com",
     "sqladmin.googleapis.com",
     "compute.googleapis.com",
+    "firebase.googleapis.com",           # Firebase Management API
+    "identitytoolkit.googleapis.com",    # Identity Platform (Auth)
   ])
   service            = each.key
   disable_on_destroy = false
@@ -391,6 +393,62 @@ resource "google_cloud_run_domain_mapping" "backend_domain" {
   spec {
     route_name = google_cloud_run_v2_service.backend.name
   }
+}
+
+# -----------------------------------------------------
+# 19. Firebase Authentication Configuration
+# -----------------------------------------------------
+
+# GCPプロジェクトでFirebaseを有効化
+resource "google_firebase_project" "default" {
+  provider = google-beta
+  project  = var.project_id
+
+  # APIが有効化されてから実行
+  depends_on = [google_project_service.apis]
+}
+
+# Firebase Web App の作成 (Frontend用)
+resource "google_firebase_web_app" "frontend" {
+  provider     = google-beta
+  project      = var.project_id
+  display_name = "Celestial Biome Frontend (${var.env_name})"
+
+  # Firebaseプロジェクト有効化後に作成
+  depends_on = [google_firebase_project.default]
+}
+
+# Web Appの設定値（API Keyなど）を取得するデータソース
+data "google_firebase_web_app_config" "frontend" {
+  provider   = google-beta
+  web_app_id = google_firebase_web_app.frontend.app_id
+  project    = var.project_id
+}
+
+# Identity Platform (Auth) の設定
+# ここで Email/Password 認証を有効化します
+#resource "google_identity_platform_config" "auth_config" {
+#  project  = var.project_id
+#
+#  sign_in {
+#    email {
+#      enabled           = true
+#      password_required = true # パスワード必須
+#    }
+#    # 必要に応じてここにGoogleログインなどを追加可能
+#    # anonymous { enabled = true }
+#  }
+#
+#  depends_on = [google_firebase_project.default]
+#}
+
+# Backend (Cloud Run SA) に Firebase の検証権限を付与
+# IDトークンの検証やユーザー情報の取得に必要です
+resource "google_project_iam_member" "backend_firebase_viewer" {
+  project = var.project_id
+  # ユーザー情報の参照権限 (verify_id_token等で必要になる場合がある)
+  role    = "roles/firebaseauth.viewer"
+  member  = "serviceAccount:${data.google_compute_default_service_account.default.email}"
 }
 
 # -----------------------------------------------------

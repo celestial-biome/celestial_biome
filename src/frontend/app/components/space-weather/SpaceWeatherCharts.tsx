@@ -2,7 +2,6 @@
 
 import type * as echarts from 'echarts';
 import dynamic from 'next/dynamic';
-import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getBzOption, getKpOption, getWindOption, getXrayOption } from './chart-options';
 import { bandIdFromXray, nearestY, XRAY_BANDS, type XY } from './utils';
@@ -32,15 +31,17 @@ export function XrayChart({ data, onChartReady }: ChartProps & { data: XY[] }) {
   // グラフィック（ラベル）更新ロジック
   useEffect(() => {
     if (!chartInstance || data.length === 0) return;
+    // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
     if ((chartInstance as any).isDisposed?.()) return;
 
     const GRID_RIGHT = 20;
     const INSET = 6;
 
-    const xmin = data[0]![0];
-    const xmax = data[data.length - 1]![0];
+    const xmin = data[0]?.[0];
+    const xmax = data[data.length - 1]?.[0];
 
     const getXInsideCurrentView = () => {
+      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
       const opt: any = chartInstance.getOption();
       const dz = opt?.dataZoom?.[0] ?? {};
       if (typeof dz.startValue === 'number' && typeof dz.endValue === 'number') {
@@ -71,7 +72,8 @@ export function XrayChart({ data, onChartReady }: ChartProps & { data: XY[] }) {
         const p2 = safePix(x, b.y2);
         if (!p1 || !p2) return null;
 
-        const y = (p1[1]! + p2[1]!) / 2;
+        // もし undefined なら 0 として扱う、などのフォールバックを入れる
+        const y = ((p1[1] ?? 0) + (p2[1] ?? 0)) / 2;
         const active = activeId === b.id;
         const opacity = active ? b.activeOpacity : b.baseOpacity;
         const weight = active ? Math.max(800, b.fontWeight) : b.fontWeight;
@@ -94,11 +96,13 @@ export function XrayChart({ data, onChartReady }: ChartProps & { data: XY[] }) {
             verticalAlign: 'middle',
           },
         };
+        // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
       }).filter(Boolean) as any[];
     };
 
     let raf = 0;
     const updateLabels = () => {
+      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
       if ((chartInstance as any).isDisposed?.()) return;
       if (raf) cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
@@ -110,9 +114,10 @@ export function XrayChart({ data, onChartReady }: ChartProps & { data: XY[] }) {
         );
       });
     };
-
+    // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
     const onUpdateAxisPointer = (evt: any) => {
       const axisInfo =
+        // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
         evt?.axesInfo?.find((a: any) => a.axisDimension === 'x') ?? evt?.axesInfo?.[0];
       const x = axisInfo?.value;
       if (typeof x !== 'number') return;

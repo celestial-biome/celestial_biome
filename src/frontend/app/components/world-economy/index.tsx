@@ -33,7 +33,7 @@ const calculateMetrics = (data: EconomyApiResponse | null) => {
   const countries = Object.keys(data);
 
   // 1. USA Stock
-  const usaStock = data['USA']?.STOCK?.slice(-1)[0];
+  const usaStock = data.USA?.STOCK?.slice(-1)[0];
   const usaStockVal = usaStock ? usaStock.value.toFixed(2) : '-';
 
   // 2. Top Performer
@@ -78,10 +78,10 @@ const calculateMetrics = (data: EconomyApiResponse | null) => {
   return {
     usaStockVal,
     topPerfCountry,
-    maxGrowth: isFinite(maxGrowth) ? `+${maxGrowth.toFixed(1)}%` : '-',
+    maxGrowth: Number.isFinite(maxGrowth) ? `+${maxGrowth.toFixed(1)}%` : '-',
     maxInfCountry,
-    maxInfVal: isFinite(maxInfVal) ? `${maxInfVal.toFixed(2)}%` : '-',
-    totalGdp: (totalGdp / 1e12).toFixed(2) + 'T',
+    maxInfVal: Number.isFinite(maxInfVal) ? `${maxInfVal.toFixed(2)}%` : '-',
+    totalGdp: `${(totalGdp / 1e12).toFixed(2)}T`,
   };
 };
 
