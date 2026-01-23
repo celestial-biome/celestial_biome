@@ -33,7 +33,7 @@ class Command(BaseCommand):
         query = f"""
             SELECT timestamp, metric, AVG(value) as value
             FROM `{project_id}.{dataset_id}.space_weather_metrics`
-            WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+            WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 6 DAY)
             GROUP BY timestamp, metric
             ORDER BY timestamp ASC
         """
