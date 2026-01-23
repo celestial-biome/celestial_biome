@@ -12,7 +12,7 @@ async function getEconomyData(): Promise<EconomyApiResponse | null> {
     process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   try {
-    const res = await fetch(`${apiUrl}/api/v1/economy/world-economy/`, {
+    const res = await fetch(`${apiUrl}/api/v1/economy/world-economy/?start_date=2000-01-01`, {
       next: { revalidate: 3600 },
     });
 

@@ -76,6 +76,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **IaC**            | Terraform           | Multi-environment management (Dev/Stage/Prod)                |
 | **CI/CD**          | GitHub Actions      | CI, Build, Deploy                        |
 | **Monitoring**     | Sentry              | Error Tracking, Source Maps (Frontend)   |
+| **Authentication** | **Firebase Authentication** | Identity Provider (Google Login), Secure Session Management, Staging/Prod Isolation |
 
 ---
 
