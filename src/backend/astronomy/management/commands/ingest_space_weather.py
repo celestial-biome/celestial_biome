@@ -18,24 +18,28 @@ SOLAR_WIND = "https://services.swpc.noaa.gov/products/solar-wind"
 KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json"
 
 # BigQuery Config
-# 環境変数 'BQ_DATASET_ID' があればそれを使い、なければデフォルト(本番名)を使う
 DATASET_ID = os.getenv("BQ_DATASET_ID", "celestial_biome_data")
 TABLE_ID = "space_weather_metrics"
 
 
 class Command(BaseCommand):
-    help = "Fetches space weather data from NOAA SWPC and ingests it into BigQuery."
+    help = "Fetches space weather data and ingests ONLY NEW data into BigQuery."
 
     def add_arguments(self, parser):
-        parser.add_argument("--days", type=int, default=7, help="Fetch last N days (max 7 for SWPC JSONs)")
-        parser.add_argument("--project", type=str, default=None, help="GCP Project ID (optional if inferred)")
+        parser.add_argument("--days", type=int, default=7, help="Fetch last N days")
+        parser.add_argument("--project", type=str, default=None, help="GCP Project ID")
 
     def handle(self, *args, **options):
         days = options["days"]
         project_id = options["project"] or settings.GOOGLE_CLOUD_PROJECT
 
-        if not project_id:
-            self.stdout.write(self.style.WARNING("No Google Cloud Project ID found. Trying default credentials..."))
+        # BQクライアントを早めに初期化
+        client = bigquery.Client(project=project_id)
+        table_ref = f"{client.project}.{DATASET_ID}.{TABLE_ID}"
+
+        # --- 0. BigQueryから各メトリクスの最新日時を取得 ---
+        latest_timestamps = self.get_latest_timestamps(client, table_ref)
+        self.stdout.write(f"Latest timestamps in BQ: {latest_timestamps}")
 
         # --- 1. 時間範囲の計算 (UTC) ---
         now = datetime.now(ZoneInfo("UTC"))
@@ -75,27 +79,48 @@ class Command(BaseCommand):
                 frames.append(df)
 
             if not frames:
-                self.stdout.write(self.style.WARNING("No data found for the specified period."))
+                self.stdout.write(self.style.WARNING("No data fetched from NOAA."))
                 return
 
             result_df = pd.concat(frames)
             result_df.index.name = "timestamp"
             result_df = result_df.reset_index()
 
+            # 型変換
             result_df["timestamp"] = pd.to_datetime(result_df["timestamp"])
             result_df["metric"] = result_df["metric"].astype(str)
             result_df["value"] = result_df["value"].astype(float)
 
-            self.stdout.write(f"Prepared {len(result_df)} rows for ingestion.")
+            # --- 3.5 重複排除 ---
+            # BQにある最新日時より新しいデータのみに絞る
+            new_rows = []
+            for metric, group in result_df.groupby("metric"):
+                last_ts = latest_timestamps.get(metric)
+                if last_ts:
+                    # BQにデータがある場合: 最新日時より後のものだけ抽出
+                    filtered = group[group["timestamp"] > last_ts]
+                    if not filtered.empty:
+                        new_rows.append(filtered)
+                else:
+                    # BQにデータがない場合: 全て新規
+                    new_rows.append(group)
+
+            if new_rows:
+                result_df = pd.concat(new_rows)
+            else:
+                self.stdout.write(self.style.SUCCESS("No new data to ingest (all duplicates)."))
+                return
+
+            if result_df.empty:
+                self.stdout.write(self.style.SUCCESS("No new data to ingest (result empty)."))
+                return
+
+            self.stdout.write(f"Prepared {len(result_df)} new rows for ingestion.")
 
             # --- 4. BigQuery への Insert ---
-            client = bigquery.Client(project=project_id)
-            table_ref = f"{client.project}.{DATASET_ID}.{TABLE_ID}"
-
             job_config = bigquery.LoadJobConfig(
                 write_disposition="WRITE_APPEND",
                 schema=[
-                    # mode="REQUIRED" を明示して Terraform 側の定義と合わせます
                     bigquery.SchemaField("timestamp", "TIMESTAMP", mode="REQUIRED"),
                     bigquery.SchemaField("metric", "STRING", mode="REQUIRED"),
                     bigquery.SchemaField("value", "FLOAT", mode="NULLABLE"),
@@ -110,6 +135,28 @@ class Command(BaseCommand):
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error during ingestion: {e}"))
             sys.exit(1)
+
+    def get_latest_timestamps(self, client, table_ref) -> dict:
+        """
+        BigQueryから各metricごとの最新のtimestampを取得して辞書で返す
+        """
+        try:
+            client.get_table(table_ref)
+        except Exception:
+            return {}
+
+        query = f"""
+            SELECT metric, MAX(timestamp) as max_ts
+            FROM `{table_ref}`
+            GROUP BY metric
+        """
+        try:
+            query_job = client.query(query)
+            results = query_job.result()
+            return {row.metric: pd.Timestamp(row.max_ts).tz_convert("UTC") for row in results}
+        except Exception as e:
+            self.stdout.write(self.style.WARNING(f"Could not fetch latest timestamps (First run?): {e}"))
+            return {}
 
 
 # -----------------------------
@@ -195,8 +242,6 @@ def load_solarwind_speed(start_ts, end_ts, days) -> pd.Series:
         return pd.Series(dtype=float)
 
     df = df[df["time_tag"].between(start_ts, end_ts)]
-
-    # 修正: set_indexしてから数値変換することで整合性を維持
     return pd.to_numeric(df.set_index("time_tag")[col], errors="coerce").dropna().sort_index()
 
 
@@ -211,8 +256,6 @@ def load_solarwind_bz(start_ts, end_ts, days) -> pd.Series:
         return pd.Series(dtype=float)
 
     df = df[df["time_tag"].between(start_ts, end_ts)]
-
-    # 修正
     return pd.to_numeric(df.set_index("time_tag")[col], errors="coerce").dropna().sort_index()
 
 
@@ -226,6 +269,4 @@ def load_kp(start_ts, end_ts) -> pd.Series:
         return pd.Series(dtype=float)
 
     df = df[df["time_tag"].between(start_ts, end_ts)]
-
-    # 修正
     return pd.to_numeric(df.set_index("time_tag")[col], errors="coerce").dropna().sort_index()
