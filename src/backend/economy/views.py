@@ -7,6 +7,7 @@ from drf_spectacular.types import OpenApiTypes
 
 # Swagger (drf-spectacular)
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -17,6 +18,8 @@ class EconomyDashboardView(APIView):
     """
     世界経済データの取得API (月次集計版・フィルタリング対応)
     """
+
+    permission_classes = [AllowAny]
 
     @extend_schema(
         summary="世界経済データの取得 (月次集計版)",

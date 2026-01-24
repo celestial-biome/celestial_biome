@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import generics
+from rest_framework.permissions import AllowAny
 
 from .models import Earthquake
 from .serializers import EarthquakeSerializer
@@ -14,7 +15,7 @@ class EarthquakeListView(generics.ListAPIView):
     """
 
     serializer_class = EarthquakeSerializer
-    permission_classes = []  # 必要に応じて権限設定
+    permission_classes = [AllowAny]
 
     @extend_schema(
         summary="地震データの取得",

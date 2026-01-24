@@ -6,6 +6,7 @@ from django.utils import timezone
 # OpenApiParameter を追加インポート
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -18,11 +19,13 @@ class SpaceWeatherListView(APIView):
     指定した期間（デフォルト7日間）の宇宙天気データを取得し、フロントエンド用に整形して返すAPI
     """
 
+    permission_classes = [AllowAny]
+
     # swagger用のドキュメント情報
     @extend_schema(
         summary="宇宙天気データの時系列取得",
         description="指定した期間（daysパラメータ）のデータを取得し、タイムスタンプごとのオブジェクトに整形して返します。",
-        # ▼ ここに Parameters の設定を追加しました ▼
+        # Parameters
         parameters=[
             OpenApiParameter(
                 name="days",
