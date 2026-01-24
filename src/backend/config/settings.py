@@ -184,11 +184,12 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         # 作成したFirebase認証クラスを最優先にする
         "config.authentication.FirebaseAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
     # デフォルトの権限設定
     "DEFAULT_PERMISSION_CLASSES": [
-        # デフォルトで閲覧はだれでも可能
-        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+        # デフォルトの権限設定を「認証済みユーザーのみ許可」にする
+        "rest_framework.permissions.IsAuthenticated",
     ],
 }
 
