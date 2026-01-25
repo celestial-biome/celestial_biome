@@ -13,7 +13,6 @@ async function getSpaceWeatherData(): Promise<WeatherData[] | null> {
     process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   try {
-    // 本日から7日分のデータを取得する
     const res = await fetch(`${apiUrl}/api/v1/astronomy/space-weather/`, {
       next: { revalidate: 3600 },
     });

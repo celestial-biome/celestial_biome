@@ -9,8 +9,7 @@ async function getEarthquakeData(): Promise<Earthquake[] | null> {
     process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   try {
-    // 過去30日分のデータを取得する
-    const res = await fetch(`${apiUrl}/api/v1/geology/earthquakes/?days=30`, {
+    const res = await fetch(`${apiUrl}/api/v1/geology/earthquakes/`, {
       next: { revalidate: 3600 },
     });
 
