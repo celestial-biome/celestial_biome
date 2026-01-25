@@ -67,8 +67,6 @@ export default async function Home() {
           </p>
         </div>
 
-        {/* ロード画面(Loading...)は不要。SSRなのでデータが入った状態で画面が表示される */}
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           <LinkCard
             href="/world-economy"
