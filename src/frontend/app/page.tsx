@@ -7,28 +7,23 @@ import type { WeatherData } from './components/space-weather/utils';
 import WorldEconomyDashboard from './components/world-economy';
 import type { EconomyApiResponse } from './components/world-economy/utils';
 
-// 【重要】Docker内部通信用のURL判定ロジック
-// サーバー側で実行されるときは 'http://backend:8000' (Dockerサービス名) を使う
-// ※ docker-compose.yml のサービス名が 'backend' でない場合は、その名前に変更してください
 const API_BASE_URL =
-  typeof window === 'undefined'
-    ? 'http://backend:8000'
-    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 async function getDashboardData() {
-  console.log(`Fetching data from: ${API_BASE_URL}`); // ログで接続先を確認
+  console.log(`[Server] Fetching dashboard data from: ${API_BASE_URL}`);
 
   try {
     const [economyRes, spaceRes, quakeRes] = await Promise.allSettled([
-      // 3600秒 = 1時間 キャッシュする設定
+      // next: { revalidate: 3600 } により、1時間はキャッシュされたHTMLを返します（爆速化の鍵）
       fetch(`${API_BASE_URL}/api/v1/economy/world-economy/`, { next: { revalidate: 3600 } }),
       fetch(`${API_BASE_URL}/api/v1/astronomy/space-weather/`, { next: { revalidate: 3600 } }),
       fetch(`${API_BASE_URL}/api/v1/geology/earthquakes/`, { next: { revalidate: 3600 } }),
     ]);
 
-    // レスポンスのステータスチェックとログ出力（デバッグ用）
+    // 失敗時はログを出してデバッグしやすくする
     if (economyRes.status === 'fulfilled' && !economyRes.value.ok) {
-      console.error('Economy fetch failed:', economyRes.value.status, economyRes.value.statusText);
+      console.error(`Economy fetch failed: ${economyRes.value.status} via ${API_BASE_URL}`);
     }
 
     const economyData: EconomyApiResponse | null =
@@ -44,17 +39,18 @@ async function getDashboardData() {
 
     return { economyData, spaceWeatherData, earthquakes };
   } catch (error) {
-    console.error('Server side fetch failed:', error);
+    console.error('Server side fetch error:', error);
     return { economyData: null, spaceWeatherData: null, earthquakes: [] };
   }
 }
 
 export default async function Home() {
+  // サーバーサイドでデータ取得完了後にレンダリング開始
   const { economyData, spaceWeatherData, earthquakes } = await getDashboardData();
 
   return (
     <main className="min-h-[calc(100vh-64px)] bg-gray-950 flex flex-col justify-center relative overflow-hidden">
-      {/* 背景装飾 */}
+      {/* 背景の装飾 */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl opacity-30 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-900/40 rounded-full blur-[128px]" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-900/40 rounded-full blur-[128px]" />
@@ -71,7 +67,6 @@ export default async function Home() {
           </p>
         </div>
 
-        {/* データ表示部分 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           <LinkCard
             href="/world-economy"
@@ -123,7 +118,7 @@ export default async function Home() {
   );
 }
 
-// LinkCardコンポーネントはそのまま
+// LinkCard は変更なし
 function LinkCard({
   href,
   title,
