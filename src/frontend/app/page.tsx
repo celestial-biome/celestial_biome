@@ -14,7 +14,8 @@ import type { EconomyApiResponse } from './components/world-economy/utils';
  * * 環境変数 INTERNAL_API_URL が設定されていればそれを使い、
  * なければ Docker Compose のデフォルト(http://backend:8000)を使います。
  */
-const API_BASE_URL = process.env.INTERNAL_API_URL || 'http://backend:8000';
+const API_BASE_URL =
+  process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 async function getDashboardData() {
   console.log(`[Server] Fetching dashboard data from: ${API_BASE_URL}`);
