@@ -40,3 +40,9 @@ variable "deletion_protection" {
   type        = bool
   default     = true
 }
+
+variable "notification_email" {
+  description = "The email address for monitoring alerts"
+  type        = string
+  default     = "celestialbiome@gmail.com"
+}
