@@ -11,7 +11,13 @@ locals {
       description   = "Space weather and environmental data"
       location      = var.region
     }
-    # 将来データセットが増えたらここに追記
+    "billing_export" = {
+      dataset_id    = "billing_export_data${local.suffix_underscore}"
+      friendly_name = "GCP Billing Export Data"
+      description   = "GCP billing export dataset (Standard & Detailed)"
+      location      = var.region
+    }
+    # データセットが増えたらここに追記
     # "another_dataset" = { ... }
   }
 
