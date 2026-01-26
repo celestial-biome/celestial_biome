@@ -7,14 +7,8 @@ import type { WeatherData } from './components/space-weather/utils';
 import WorldEconomyDashboard from './components/world-economy';
 import type { EconomyApiResponse } from './components/world-economy/utils';
 
-/**
- * 【重要】API接続先の決定ロジック
- * ステージングや本番環境では、Next.jsコンテナからDjangoコンテナへの通信経路が
- * ローカル(backend:8000)とは異なる場合があります。
- * * 環境変数 INTERNAL_API_URL が設定されていればそれを使い、
- * なければ Docker Compose のデフォルト(http://backend:8000)を使います。
- */
-const API_BASE_URL = process.env.INTERNAL_API_URL || 'http://backend:8000';
+const API_BASE_URL =
+  process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 async function getDashboardData() {
   console.log(`[Server] Fetching dashboard data from: ${API_BASE_URL}`);
@@ -72,8 +66,6 @@ export default async function Home() {
             Monitor real-time data from economic, geological, and astronomical sources.
           </p>
         </div>
-
-        {/* ロード画面(Loading...)は不要。SSRなのでデータが入った状態で画面が表示される */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           <LinkCard
