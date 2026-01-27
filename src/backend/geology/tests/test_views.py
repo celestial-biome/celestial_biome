@@ -33,7 +33,7 @@ class TestEarthquakeListView:
         # 2. 最新だが小さい地震 (今日, M4.5) -> Osaka
         Earthquake.objects.create(
             usgs_id="eq2",
-            timestamp=now - timedelta(hours=1),
+            timestamp=now - timedelta(minutes=5),
             magnitude=4.5,
             place="Osaka",
             depth=10.0,
