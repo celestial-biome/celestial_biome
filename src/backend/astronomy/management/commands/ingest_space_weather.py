@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from datetime import datetime, timedelta
@@ -9,6 +10,8 @@ import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from google.cloud import bigquery
+
+logger = logging.getLogger(__name__)
 
 # -----------------------------
 # Constants
@@ -30,6 +33,10 @@ class Command(BaseCommand):
         parser.add_argument("--project", type=str, default=None, help="GCP Project ID")
 
     def handle(self, *args, **options):
+        # 実行開始を構造化ログで記録
+        command_name = "ingest_space_weather"
+        logger.info(f"Starting {command_name}", extra={"job_name": command_name, "phase": "startup"})
+
         days = options["days"]
         project_id = options["project"] or settings.GOOGLE_CLOUD_PROJECT
 
@@ -49,6 +56,9 @@ class Command(BaseCommand):
         self.stdout.write(f"Fetching data from {start_ts} to {end_ts} ...")
 
         try:
+            # 処理の進捗を記録
+            logger.info(f"Fetching data for last {days} days", extra={"job_name": command_name, "days": days})
+
             # --- 2. データ取得 & 整形 ---
             s_xray = load_goes_xrsb(start_ts, end_ts, days)
             s_speed = load_solarwind_speed(start_ts, end_ts, days)
@@ -132,7 +142,17 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS(f"Successfully loaded data to {table_ref}"))
 
+            logger.info(
+                f"Successfully ingested data to {table_ref}", extra={"job_name": command_name, "phase": "complete"}
+            )
+
         except Exception as e:
+            # 失敗時の詳細ログ（スタックトレースを含める）
+            logger.error(
+                f"Failed to execute {command_name}: {str(e)}",
+                exc_info=True,  # これでスタックトレースがJSONの 'exc_info' フィールドに入ります
+                extra={"job_name": command_name, "phase": "execution_error", "error_type": type(e).__name__},
+            )
             self.stdout.write(self.style.ERROR(f"Error during ingestion: {e}"))
             sys.exit(1)
 
