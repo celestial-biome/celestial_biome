@@ -1,6 +1,16 @@
-import type { EChartsOption } from 'echarts';
+import type { EChartsOption, LineSeriesOption } from 'echarts';
 import type { SeriesData } from './utils';
 import { COUNTRY_COLORS, COUNTRY_ORDER } from './utils';
+
+// --- Types ---
+
+/**
+ * EChartsのLineSeries型をベースに、nameを必須にした型
+ * これにより formatSeries 内での名前参照が安全になります
+ */
+type ChartSeries = LineSeriesOption & {
+  name: string;
+};
 
 // --- Helpers ---
 
@@ -24,12 +34,13 @@ const baseLegend: EChartsOption['legend'] = {
   data: COUNTRY_ORDER,
 };
 
-// データシリーズに色と順序を適用するヘルパー
-// biome-ignore lint/suspicious/noExplicitAny: ECharts用オブジェクト(変換後)も受け取れるようにanyを許容
-const formatSeries = (series: any[]) => {
-  // 定義順に並べ替え
+/**
+ * データシリーズに色と順序を適用するヘルパー
+ * any[] から ChartSeries[] へ変更し、内部プロパティへのアクセスを安全にしました
+ */
+const formatSeries = (series: ChartSeries[]): ChartSeries[] => {
   const sortedSeries = [...series].sort(
-    (a, b) => COUNTRY_ORDER.indexOf(a.name) - COUNTRY_ORDER.indexOf(b.name),
+    (a, b) => COUNTRY_ORDER.indexOf(a.name ?? '') - COUNTRY_ORDER.indexOf(b.name ?? ''),
   );
 
   return sortedSeries.map((s) => ({
@@ -41,7 +52,7 @@ const formatSeries = (series: any[]) => {
 
 // --- 1. 株価パフォーマンス (正規化) ---
 export const getStockOption = (series: SeriesData[]): EChartsOption => {
-  const normalizedSeries = series.map((s) => {
+  const normalizedSeries: ChartSeries[] = series.map((s) => {
     let data = s.data;
     if (data.length > 0) {
       const firstVal = data[0].value;
@@ -58,7 +69,7 @@ export const getStockOption = (series: SeriesData[]): EChartsOption => {
       showSymbol: false,
       smooth: true,
       data: data.map((d) => [d.date, d.value]),
-      emphasis: { focus: 'series' },
+      emphasis: { focus: 'series' }, // 変数にChartSeries型をつけているのでas const不要
     };
   });
 
@@ -67,14 +78,15 @@ export const getStockOption = (series: SeriesData[]): EChartsOption => {
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: ECharts型定義回避
-      valueFormatter: (value: any) => (value as number)?.toFixed(1),
+      // valueをunknownとして受け取り、型ガードで安全に処理
+      valueFormatter: (value: unknown) =>
+        typeof value === 'number' ? value.toFixed(1) : String(value),
     },
     legend: baseLegend,
     grid: baseGrid,
     xAxis: {
       type: 'time',
-      boundaryGap: ['0%', '0%'],
+      boundaryGap: ['0%', '0%'] as [string, string],
       axisLabel: { color: '#a1a1aa' },
       splitLine: { show: false },
     },
@@ -85,13 +97,13 @@ export const getStockOption = (series: SeriesData[]): EChartsOption => {
       axisLabel: { color: '#a1a1aa' },
       splitLine: { lineStyle: { color: '#27272a' } },
     },
-    series: formatSeries(normalizedSeries),
+    series: formatSeries(normalizedSeries) as EChartsOption['series'],
   };
 };
 
 // --- 2. インフレ率 ---
 export const getInflationOption = (series: SeriesData[]): EChartsOption => {
-  const formattedData = series.map((s) => ({
+  const formattedData: ChartSeries[] = series.map((s) => ({
     name: s.name,
     type: 'line',
     showSymbol: true,
@@ -106,14 +118,14 @@ export const getInflationOption = (series: SeriesData[]): EChartsOption => {
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: ECharts型定義回避
-      valueFormatter: (value: any) => `${(value as number)?.toFixed(2)}%`,
+      valueFormatter: (value: unknown) =>
+        typeof value === 'number' ? `${value.toFixed(2)}%` : String(value),
     },
     legend: baseLegend,
     grid: baseGrid,
     xAxis: {
       type: 'time',
-      boundaryGap: ['0%', '0%'],
+      boundaryGap: ['0%', '0%'] as [string, string],
       axisLabel: { color: '#a1a1aa' },
       splitLine: { show: false },
     },
@@ -124,13 +136,13 @@ export const getInflationOption = (series: SeriesData[]): EChartsOption => {
       axisLabel: { color: '#a1a1aa' },
       splitLine: { lineStyle: { color: '#27272a' } },
     },
-    series: formatSeries(formattedData),
+    series: formatSeries(formattedData) as EChartsOption['series'],
   };
 };
 
 // --- 3. GDP推移 ---
 export const getGdpOption = (series: SeriesData[]): EChartsOption => {
-  const formattedData = series.map((s) => ({
+  const formattedData: ChartSeries[] = series.map((s) => ({
     name: s.name,
     type: 'line',
     showSymbol: true,
@@ -144,14 +156,14 @@ export const getGdpOption = (series: SeriesData[]): EChartsOption => {
     tooltip: {
       trigger: 'axis',
       ...baseTooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: ECharts型定義回避
-      valueFormatter: (value: any) => `$${((value as number) / 1e9)?.toFixed(0)} B`,
+      valueFormatter: (value: unknown) =>
+        typeof value === 'number' ? `$${(value / 1e9).toFixed(0)} B` : String(value),
     },
     legend: baseLegend,
     grid: baseGrid,
     xAxis: {
       type: 'time',
-      boundaryGap: ['0%', '0%'],
+      boundaryGap: ['0%', '0%'] as [string, string],
       axisLabel: { color: '#a1a1aa' },
       splitLine: { show: false },
     },
@@ -165,6 +177,6 @@ export const getGdpOption = (series: SeriesData[]): EChartsOption => {
       },
       splitLine: { lineStyle: { color: '#27272a' } },
     },
-    series: formatSeries(formattedData),
+    series: formatSeries(formattedData) as EChartsOption['series'],
   };
 };
