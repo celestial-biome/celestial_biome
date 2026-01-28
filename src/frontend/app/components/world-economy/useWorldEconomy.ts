@@ -16,14 +16,21 @@ export function useWorldEconomy(data: EconomyApiResponse | null) {
 
     for (const country of countries) {
       const countryData = data[country];
+
+      // 株価 (STOCK)
       if (countryData.STOCK) {
         stockSeries.push({ name: country, data: countryData.STOCK });
       }
+
+      // GDP
       if (countryData.GDP) {
         gdpSeries.push({ name: country, data: countryData.GDP });
       }
-      if (countryData.INFLATION) {
-        inflationSeries.push({ name: country, data: countryData.INFLATION });
+
+      // インフレ率 (INFLATION または CPI)
+      const inflationData = countryData.INFLATION || countryData.CPI;
+      if (inflationData) {
+        inflationSeries.push({ name: country, data: inflationData });
       }
     }
 
