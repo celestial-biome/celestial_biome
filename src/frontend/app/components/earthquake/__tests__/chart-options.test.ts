@@ -1,3 +1,9 @@
+import type {
+  BarSeriesOption,
+  ScatterSeriesOption,
+  XAXisComponentOption,
+  YAXisComponentOption,
+} from 'echarts';
 import { describe, expect, it } from 'vitest';
 import {
   getDepthScatterOption,
@@ -40,24 +46,31 @@ describe('earthquake/chart-options', () => {
 
     it('should generate correct scatter data', () => {
       const option = getMapOption(mockData);
-      const series: any = option.series?.[0];
+      // ScatterSeriesOption にキャスト
+      const series = option.series?.[0] as ScatterSeriesOption;
+      const data = series.data as MapDataPoint[];
 
       expect(series.type).toBe('scatter');
-      expect(series.data).toHaveLength(2);
-      expect(series.data[0].name).toBe('Tokyo, Japan');
+      expect(data).toHaveLength(2);
+      expect(data[0].name).toBe('Tokyo, Japan');
       // [lng, lat, mag]
-      expect(series.data[0].value).toEqual([139.7, 35.6, 5.5]);
+      expect(data[0].value).toEqual([139.7, 35.6, 5.5]);
     });
 
     it('should assign colors based on magnitude', () => {
       const option = getMapOption(mockData);
-      const series: any = option.series?.[0];
-      const colorFunc = series.itemStyle.color;
+      const series = option.series?.[0] as ScatterSeriesOption;
 
-      // M5.5 -> Orange (#f97316)
-      expect(colorFunc({ data: { mag: 5.5 } })).toBe('#f97316');
-      // M7.2 -> Red (#ef4444)
-      expect(colorFunc({ data: { mag: 7.2 } })).toBe('#ef4444');
+      // itemStyle.color が関数の場合を想定
+      const colorFunc = series.itemStyle?.color;
+      if (typeof colorFunc === 'function') {
+        // M5.5 -> Orange (#f97316)
+        expect(colorFunc({ data: { mag: 5.5 } })).toBe('#f97316');
+        // M7.2 -> Red (#ef4444)
+        expect(colorFunc({ data: { mag: 7.2 } })).toBe('#ef4444');
+      } else {
+        throw new Error('itemStyle.color should be a function');
+      }
     });
   });
 
@@ -69,11 +82,9 @@ describe('earthquake/chart-options', () => {
 
     it('should bucket magnitudes correctly', () => {
       const option = getMagHistOption(mockData);
-      const series: any = option.series?.[0];
+      const series = option.series?.[0] as BarSeriesOption;
 
       // Bins: ['2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9+']
-      // 5.5 -> Index 3 ('5-6')
-      // 7.2 -> Index 5 ('7-8')
       const expectedData = [0, 0, 0, 1, 0, 1, 0, 0];
       expect(series.data).toEqual(expectedData);
     });
@@ -87,11 +98,12 @@ describe('earthquake/chart-options', () => {
 
     it('should map depth and magnitude correctly', () => {
       const option = getDepthScatterOption(mockData);
-      const series: any = option.series?.[0];
+      const series = option.series?.[0] as ScatterSeriesOption;
+      const data = series.data as [number, number, string, string][];
 
       // [depth, magnitude, place, timestamp]
-      expect(series.data[0]).toEqual([30, 5.5, 'Tokyo, Japan', '2025-01-01T10:00:00Z']);
-      expect(series.data[1]).toEqual([10, 7.2, 'California, USA', '2025-01-02T12:00:00Z']);
+      expect(data[0]).toEqual([30, 5.5, 'Tokyo, Japan', '2025-01-01T10:00:00Z']);
+      expect(data[1]).toEqual([10, 7.2, 'California, USA', '2025-01-02T12:00:00Z']);
     });
   });
 
@@ -112,12 +124,10 @@ describe('earthquake/chart-options', () => {
       ];
       const option = getRegionRankOption(rankingData);
 
-      // yAxis data (reversed)
-      const yAxis: any = option.yAxis;
+      const yAxis = option.yAxis as YAXisComponentOption;
       expect(yAxis.data).toEqual(['USA', 'Japan']);
 
-      // series data (reversed)
-      const series: any = option.series?.[0];
+      const series = option.series?.[0] as BarSeriesOption;
       expect(series.data).toEqual([5, 10]);
     });
   });
@@ -137,14 +147,15 @@ describe('earthquake/chart-options', () => {
             name: 'Japan',
             type: 'bar',
             stack: 'total',
-            emphasis: { focus: 'series', blurScope: 'coordinateSystem' },
+            emphasis: { focus: 'series' as const, blurScope: 'coordinateSystem' as const },
             data: [1, 0],
-          },
+          } as BarSeriesOption,
         ],
       };
       const option = getTimeSeriesOption(stackedData);
 
-      expect((option.xAxis as any).data).toEqual(['1/1', '1/2']);
+      const xAxis = option.xAxis as XAXisComponentOption;
+      expect(xAxis.data).toEqual(['1/1', '1/2']);
       expect(option.series).toEqual(stackedData.series);
     });
   });

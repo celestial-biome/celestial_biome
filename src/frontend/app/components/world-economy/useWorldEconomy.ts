@@ -1,11 +1,9 @@
 import { useMemo } from 'react';
+// ★ EconomyApiResponse を utils から確実にインポートする
 import type { EconomyApiResponse, SeriesData } from './utils';
 
-// 引数でデータを受け取る形に変更
 export function useWorldEconomy(data: EconomyApiResponse | null) {
-  // チャート用データへの変換 (メモ化)
   const chartData = useMemo(() => {
-    // データがない場合のデフォルト値を返す
     if (!data) return { stockSeries: [], gdpSeries: [], inflationSeries: [] };
 
     const stockSeries: SeriesData[] = [];
@@ -13,15 +11,17 @@ export function useWorldEconomy(data: EconomyApiResponse | null) {
     const inflationSeries: SeriesData[] = [];
 
     const countries = Object.keys(data);
-
     for (const country of countries) {
       const countryData = data[country];
+
       if (countryData.STOCK) {
         stockSeries.push({ name: country, data: countryData.STOCK });
       }
       if (countryData.GDP) {
         gdpSeries.push({ name: country, data: countryData.GDP });
       }
+
+      // 現状は INFLATION キーのみを見ている
       if (countryData.INFLATION) {
         inflationSeries.push({ name: country, data: countryData.INFLATION });
       }

@@ -19,6 +19,7 @@ export type EconomyApiResponse = {
     STOCK?: EconomyDataPoint[];
     GDP?: EconomyDataPoint[];
     INFLATION?: EconomyDataPoint[];
+    CPI?: EconomyDataPoint[];
   };
 };
 

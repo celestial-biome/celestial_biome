@@ -1,7 +1,20 @@
-import type { EChartsOption } from 'echarts';
+import type { EChartsOption, LineSeriesOption } from 'echarts';
 import { formatTsShort, type XY } from './utils';
 
+// --- Types ---
+
+/**
+ * EChartsのツールチップで渡されるパラメータの型を定義
+ * value は XY 型（[number, number]）であることを明示します
+ */
+interface TooltipParams {
+  value: [number, number];
+  seriesName: string;
+  marker: string;
+}
+
 // --- Helpers ---
+
 function baseTooltip() {
   return {
     trigger: 'axis',
@@ -54,6 +67,7 @@ function yAxisValue() {
 }
 
 // --- Option Generators ---
+
 export const getXrayOption = (data: XY[]): EChartsOption => {
   const tooltip = baseTooltip();
   return {
@@ -61,9 +75,9 @@ export const getXrayOption = (data: XY[]): EChartsOption => {
     grid: { left: 40, right: 20, top: 10, bottom: 14 },
     tooltip: {
       ...tooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-      formatter: (params: any) => {
-        const p = Array.isArray(params) ? params[0] : params;
+      formatter: (params: unknown) => {
+        // params は単一オブジェクトか配列で来るため正規化
+        const p = (Array.isArray(params) ? params[0] : params) as TooltipParams;
         const ts = p?.value?.[0];
         const v = p?.value?.[1];
         const val = v == null ? '—' : Number(v).toExponential(2);
@@ -106,7 +120,7 @@ export const getXrayOption = (data: XY[]): EChartsOption => {
         data: data,
         lineStyle: { width: 2, color: 'rgba(251,146,60,0.95)' },
         connectNulls: false,
-        emphasis: { focus: 'series' },
+        emphasis: { focus: 'series' as const }, // リテラル型を固定
         markArea: {
           silent: true,
           data: [
@@ -117,7 +131,7 @@ export const getXrayOption = (data: XY[]): EChartsOption => {
             [{ yAxis: 1e-4, itemStyle: { color: 'rgba(239,68,68,0.18)' } }, { yAxis: 1e-2 }],
           ],
         },
-      },
+      } satisfies LineSeriesOption, // ECharts のシリーズ定義に合致しているかチェック
     ],
   };
 };
@@ -129,9 +143,8 @@ export const getWindOption = (data: XY[]): EChartsOption => {
     grid: { left: 40, right: 10, top: 10, bottom: 14 },
     tooltip: {
       ...tooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-      formatter: (params: any) => {
-        const p = Array.isArray(params) ? params[0] : params;
+      formatter: (params: unknown) => {
+        const p = (Array.isArray(params) ? params[0] : params) as TooltipParams;
         const ts = p?.value?.[0];
         const v = p?.value?.[1];
         const val = v == null ? '—' : `${Math.round(v)} km/s`;
@@ -155,8 +168,8 @@ export const getWindOption = (data: XY[]): EChartsOption => {
         data: data,
         lineStyle: { width: 2, color: 'rgba(52,211,153,0.95)' },
         connectNulls: false,
-        emphasis: { focus: 'series' },
-      },
+        emphasis: { focus: 'series' as const },
+      } satisfies LineSeriesOption,
     ],
   };
 };
@@ -168,9 +181,8 @@ export const getBzOption = (data: XY[]): EChartsOption => {
     grid: { left: 40, right: 10, top: 10, bottom: 14 },
     tooltip: {
       ...tooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-      formatter: (params: any) => {
-        const p = Array.isArray(params) ? params[0] : params;
+      formatter: (params: unknown) => {
+        const p = (Array.isArray(params) ? params[0] : params) as TooltipParams;
         const ts = p?.value?.[0];
         const v = p?.value?.[1];
         const val = v == null ? '—' : `${Number(v).toFixed(1)} nT`;
@@ -194,14 +206,14 @@ export const getBzOption = (data: XY[]): EChartsOption => {
         data: data,
         lineStyle: { width: 2, color: 'rgba(250,204,21,0.95)' },
         connectNulls: false,
-        emphasis: { focus: 'series' },
+        emphasis: { focus: 'series' as const },
         markLine: {
           silent: true,
           symbol: ['none', 'none'],
           lineStyle: { color: 'rgba(255,255,255,0.14)' },
           data: [{ yAxis: 0 }],
         },
-      },
+      } satisfies LineSeriesOption,
     ],
   };
 };
@@ -213,9 +225,8 @@ export const getKpOption = (data: XY[]): EChartsOption => {
     grid: { left: 40, right: 10, top: 10, bottom: 40 },
     tooltip: {
       ...tooltip,
-      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-      formatter: (params: any) => {
-        const p = Array.isArray(params) ? params[0] : params;
+      formatter: (params: unknown) => {
+        const p = (Array.isArray(params) ? params[0] : params) as TooltipParams;
         const ts = p?.value?.[0];
         const v = p?.value?.[1];
         const val = v == null ? '—' : `${Math.round(v)}`;
@@ -258,14 +269,14 @@ export const getKpOption = (data: XY[]): EChartsOption => {
         data: data,
         lineStyle: { width: 2, color: 'rgba(251,146,60,0.95)' },
         connectNulls: false,
-        emphasis: { focus: 'series' },
+        emphasis: { focus: 'series' as const },
         markLine: {
           silent: true,
           symbol: ['none', 'none'],
           lineStyle: { color: 'rgba(251,146,60,0.30)', type: 'dashed' },
           data: [{ yAxis: 5 }],
         },
-      },
+      } satisfies LineSeriesOption,
     ],
   };
 };
