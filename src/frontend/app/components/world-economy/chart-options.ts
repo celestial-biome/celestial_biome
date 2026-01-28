@@ -36,7 +36,6 @@ const baseLegend: EChartsOption['legend'] = {
 
 /**
  * データシリーズに色と順序を適用するヘルパー
- * any[] から ChartSeries[] へ変更し、内部プロパティへのアクセスを安全にしました
  */
 const formatSeries = (series: ChartSeries[]): ChartSeries[] => {
   const sortedSeries = [...series].sort(

@@ -1,5 +1,6 @@
 'use client';
 
+import { FirebaseError } from 'firebase/app'; // FirebaseError をインポート
 import {
   deleteUser,
   sendPasswordResetEmail,
@@ -11,7 +12,6 @@ import { type FormEvent, useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { fetchWithAuth } from '@/lib/api-client';
 import { auth } from '@/lib/firebase';
-// 共通デザインコンポーネントのインポート
 import {
   buttonClasses,
   CelestialCard,
@@ -23,7 +23,6 @@ export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // フォームの状態
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -43,104 +42,76 @@ export default function ProfilePage() {
     }
   }, [user, loading, router]);
 
-  // プロフィール更新処理
   const handleUpdateProfile = async (e: FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
     setIsUpdating(true);
     setMessage(null);
 
     try {
-      // 1. 表示名の更新
-      if (user.displayName !== displayName) {
-        await updateProfile(user, { displayName });
-      }
+      // プロフィール名の更新
+      await updateProfile(user, { displayName });
 
-      // 2. メールアドレスの変更手続き
-      if (user.email !== email && isEditingEmail) {
+      // メールの更新 (検証メールの送信)
+      if (email !== user.email) {
         await verifyBeforeUpdateEmail(user, email);
-
         setMessage({
           type: 'info',
-          text: `確認メールを ${email} に送信しました。メール内のリンクをクリックすると変更が完了します。`,
+          text: 'Verification email sent to new address. Please check your inbox.',
         });
-        setIsEditingEmail(false);
-        setIsUpdating(false);
-        return;
+      } else {
+        setMessage({ type: 'success', text: 'Profile updated successfully!' });
       }
 
-      setMessage({ type: 'success', text: 'プロフィール情報を更新しました。' });
-      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-    } catch (error: any) {
-      console.error(error);
-      if (error.code === 'auth/requires-recent-login') {
-        setMessage({
-          type: 'error',
-          text: 'セキュリティ保護のため、メールアドレスの変更には再ログインが必要です。一度ログアウトして、再度ログインしてからお試しください。',
-        });
-      } else if (error.code === 'auth/email-already-in-use') {
-        setMessage({ type: 'error', text: 'このメールアドレスは既に使用されています。' });
+      // バックエンドDBへの同期
+      await fetchWithAuth('/api/user/profile', {
+        method: 'PUT',
+        body: JSON.stringify({ display_name: displayName }),
+      });
+    } catch (err) {
+      if (err instanceof FirebaseError) {
+        setMessage({ type: 'error', text: `Failed to update: ${err.message}` });
       } else {
-        setMessage({ type: 'error', text: `更新に失敗しました: ${error.message}` });
+        setMessage({ type: 'error', text: 'An unexpected error occurred.' });
       }
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // パスワードリセット処理
   const handlePasswordReset = async () => {
-    if (!user || !user.email) return;
-    const confirm = window.confirm(`${user.email} 宛にパスワード再設定メールを送信しますか？`);
-    if (!confirm) return;
-
+    if (!user?.email) return;
     try {
       await sendPasswordResetEmail(auth, user.email);
-      setMessage({
-        type: 'success',
-        text: 'パスワード再設定メールを送信しました。メールボックスを確認してください。',
-      });
-    } catch (error) {
-      console.error(error);
-      setMessage({ type: 'error', text: 'メール送信に失敗しました。' });
+      setMessage({ type: 'info', text: 'Password reset email sent.' });
+    } catch (err) {
+      if (err instanceof FirebaseError) {
+        setMessage({ type: 'error', text: err.message });
+      }
     }
   };
 
-  // アカウント削除処理
   const handleDeleteAccount = async () => {
     if (!user) return;
-    const confirm = window.confirm(
-      '【重要】本当にアカウントを削除しますか？\n\n・すべてのデータが削除されます\n・この操作は取り消せません',
-    );
-    if (!confirm) return;
+    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
 
     try {
-      setIsUpdating(true);
-
-      // 1. Backend: Django側のデータを削除 (ログも残る)
-      // 先にバックエンドを消さないと、Firebase認証が消えた後にAPIを叩けなくなります
-      await fetchWithAuth('/api/v1/auth/me/', {
-        method: 'DELETE',
-      });
-
-      // 2. Firebase: 認証ユーザーを削除
       await deleteUser(user);
-
-      alert('アカウントを削除しました。ご利用ありがとうございました。');
-      router.push('/');
-      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-    } catch (error: any) {
-      console.error('Delete account error:', error);
-      if (error.code === 'auth/requires-recent-login') {
-        setMessage({
-          type: 'error',
-          text: 'セキュリティのため、アカウント削除には再ログインが必要です。一度ログアウトして再度お試しください。',
-        });
-      } else {
-        setMessage({ type: 'error', text: 'アカウントの削除に失敗しました。' });
+      router.push('/signup');
+    } catch (err) {
+      if (err instanceof FirebaseError) {
+        if (err.code === 'auth/requires-recent-login') {
+          setMessage({
+            type: 'error',
+            text: 'Please re-login to delete your account.',
+          });
+        } else {
+          setMessage({ type: 'error', text: err.message });
+        }
       }
-    } finally {
-      setIsUpdating(false);
     }
   };
 

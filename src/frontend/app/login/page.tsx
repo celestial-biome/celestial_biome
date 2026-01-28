@@ -1,8 +1,9 @@
 'use client';
 
+import { FirebaseError } from 'firebase/app';
 import {
   GoogleAuthProvider,
-  sendPasswordResetEmail, // 追加
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
 } from 'firebase/auth';
@@ -21,19 +22,14 @@ import {
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // モード管理: 'LOGIN' or 'RESET'
   const [mode, setMode] = useState<'LOGIN' | 'RESET'>('LOGIN');
-
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null); // 成功メッセージ用
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const router = useRouter();
 
-  // 共通のログイン成功後処理
   const onLoginSuccess = async () => {
     try {
-      // ログインログを記録
       await fetchWithAuth('/api/v1/auth/log/', {
         method: 'POST',
         body: JSON.stringify({ action: 'LOGIN' }),
@@ -50,18 +46,21 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       await onLoginSuccess();
-      // biome-ignore lint/suspicious/noExplicitAny: Firebase Error型定義の簡略化
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      // エラーメッセージの改善
-      if (
-        err.code === 'auth/invalid-credential' ||
-        err.code === 'auth/user-not-found' ||
-        err.code === 'auth/wrong-password'
-      ) {
-        setError('メールアドレスまたはパスワードが間違っています。');
+      // 型ガードを使用してエラーコードを判定
+      if (err instanceof FirebaseError) {
+        if (
+          err.code === 'auth/invalid-credential' ||
+          err.code === 'auth/user-not-found' ||
+          err.code === 'auth/wrong-password'
+        ) {
+          setError('メールアドレスまたはパスワードが間違っています。');
+        } else {
+          setError('ログインに失敗しました。しばらく待ってから再度お試しください。');
+        }
       } else {
-        setError('ログインに失敗しました。しばらく待ってから再度お試しください。');
+        setError('予期せぬエラーが発生しました。');
       }
     }
   };
@@ -71,14 +70,19 @@ export default function LoginPage() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       await onLoginSuccess();
-      // biome-ignore lint/suspicious/noExplicitAny: Firebase Error型定義の簡略化
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError('Googleログインに失敗しました。');
+      if (err instanceof FirebaseError) {
+        // ユーザーによるキャンセル以外の場合にエラーを表示
+        if (err.code !== 'auth/cancelled-by-user') {
+          setError('Googleログインに失敗しました。');
+        }
+      } else {
+        setError('Googleログイン中に予期せぬエラーが発生しました。');
+      }
     }
   };
 
-  // パスワードリセット処理
   const handleResetPassword = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -92,17 +96,16 @@ export default function LoginPage() {
     try {
       await sendPasswordResetEmail(auth, email);
       setSuccessMessage('パスワード再設定メールを送信しました。メールをご確認ください。');
-      // 送信後は入力欄をクリアせず、ユーザーが確認できるようにする
-      // biome-ignore lint/suspicious/noExplicitAny: Firebase Error型定義の簡略化
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      if (err.code === 'auth/user-not-found') {
-        // セキュリティ上、存在しない場合も送信したように振る舞うのがベストプラクティスですが、
-        // 利便性のため明確なエラーを出すか、あるいは汎用的なメッセージにします。
-        // ここではユーザーにわかりやすく伝えます。
-        setError('このメールアドレスは登録されていません。');
+      if (err instanceof FirebaseError) {
+        if (err.code === 'auth/user-not-found') {
+          setError('このメールアドレスは登録されていません。');
+        } else {
+          setError('メール送信に失敗しました。しばらく待ってから再度お試しください。');
+        }
       } else {
-        setError('メール送信に失敗しました。しばらく待ってから再度お試しください。');
+        setError('予期せぬエラーが発生しました。');
       }
     }
   };

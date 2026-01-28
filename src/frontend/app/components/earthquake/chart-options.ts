@@ -1,6 +1,19 @@
-import type { EChartsOption } from 'echarts';
+import type { BarSeriesOption, EChartsOption, ScatterSeriesOption } from 'echarts';
 import type { StackedSeriesData } from './useEarthquakes';
 import type { Earthquake } from './utils';
+
+// --- Types ---
+
+/**
+ * マップ上の各震源データの型定義
+ */
+interface QuakeScatterData {
+  name: string;
+  value: [number, number, number]; // [lon, lat, mag]
+  mag: number;
+  depth: number;
+  ts: number;
+}
 
 // --- Helpers ---
 
@@ -16,16 +29,17 @@ const getMarker = (color: string) =>
 
 // --- 1. 世界震源マップ ---
 export const getMapOption = (data: Earthquake[]): EChartsOption => ({
-  animation: false, // （アニメーション無効化）
+  animation: false,
   backgroundColor: 'transparent',
   tooltip: {
     ...baseTooltip,
-    // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-    formatter: (params: any) => {
-      const { name, data: item } = params;
+    formatter: (params: unknown) => {
+      // ScatterSeries のデータ構造としてキャスト
+      const p = params as { name: string; data: QuakeScatterData };
+      const item = p.data;
       return `
         <div style="font-weight:bold; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:2px;">
-          ${name}
+          ${p.name}
         </div>
         <div style="font-size:11px; line-height:1.5;">
           <span style="color:#a1a1aa;">Magnitude:</span> <b>M${item.mag.toFixed(1)}</b><br/>
@@ -59,18 +73,20 @@ export const getMapOption = (data: Earthquake[]): EChartsOption => ({
         depth: d.depth,
         ts: d.timestamp,
       })),
-      // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-      symbolSize: (val: any) => Math.max(3, val[2] ** 2.8 / 3),
+      symbolSize: (val: unknown) => {
+        const v = val as [number, number, number];
+        return Math.max(3, v[2] ** 2.8 / 3);
+      },
       itemStyle: {
-        // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-        color: (params: any) => {
-          const m = params.data.mag;
+        color: (params: unknown) => {
+          const p = params as { data: QuakeScatterData };
+          const m = p.data.mag;
           return m >= 6 ? '#ef4444' : m >= 4.5 ? '#f97316' : '#22d3ee';
         },
         shadowBlur: 10,
         shadowColor: 'rgba(0,0,0,0.5)',
       },
-    },
+    } as ScatterSeriesOption,
   ],
 });
 
@@ -108,23 +124,21 @@ export const getMagHistOption = (data: Earthquake[]): EChartsOption => {
         type: 'bar',
         data: bins,
         itemStyle: { color: '#38bdf8', borderRadius: [4, 4, 0, 0] },
-      },
+      } as BarSeriesOption,
     ],
   };
 };
 
-// --- 3. 深さ vs マグニチュード (日時追加 & スライダー非表示) ---
+// --- 3. 深さ vs マグニチュード ---
 export const getDepthScatterOption = (data: Earthquake[]): EChartsOption => ({
   animation: false,
   tooltip: {
     ...baseTooltip,
-    // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-    formatter: (p: any) => {
+    formatter: (params: unknown) => {
       // data: [depth, mag, place, timestamp]
-      const depth = p.value[0];
-      const mag = p.value[1];
-      const place = p.value[2];
-      const time = new Date(p.value[3]).toLocaleString();
+      const p = params as { value: [number, number, string, number] };
+      const [depth, mag, place, timestamp] = p.value;
+      const time = new Date(timestamp).toLocaleString();
 
       return `
         <div style="font-weight:bold; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:2px;">
@@ -138,7 +152,6 @@ export const getDepthScatterOption = (data: Earthquake[]): EChartsOption => ({
       `;
     },
   },
-  // スライダーを消したので right を詰める (50 -> 20)
   grid: { top: 20, bottom: 30, left: 40, right: 20 },
   xAxis: {
     type: 'value',
@@ -157,7 +170,7 @@ export const getDepthScatterOption = (data: Earthquake[]): EChartsOption => ({
     axisLabel: { color: '#a1a1aa' },
   },
   visualMap: {
-    show: false, //スライダー自体は非表示にする (色は適用される)
+    show: false,
     type: 'continuous',
     dimension: 1,
     min: 2.5,
@@ -179,9 +192,8 @@ export const getDepthScatterOption = (data: Earthquake[]): EChartsOption => ({
     {
       type: 'scatter',
       symbolSize: 6,
-      // ★ 4番目に timestamp を追加
       data: data.map((d) => [d.depth, d.magnitude, d.place, d.timestamp]),
-    },
+    } as ScatterSeriesOption,
   ],
 });
 
@@ -217,7 +229,7 @@ export const getRegionRankOption = (rankingData: [string, number][]): EChartsOpt
       data: rankingData.map((d) => d[1]).reverse(),
       itemStyle: {
         color: '#818cf8',
-        borderRadius: [0, 4, 4, 0],
+        borderRadius: [0, 4, 4, 0] as [number, number, number, number],
       },
       label: {
         show: true,
@@ -225,34 +237,29 @@ export const getRegionRankOption = (rankingData: [string, number][]): EChartsOpt
         color: '#fff',
         formatter: '{c}',
       },
-    },
+    } as BarSeriesOption,
   ],
 });
 
-// --- 5. 時系列推移 (ハイライト付き積み上げ棒グラフ) ---
+// --- 5. 時系列推移 ---
 export const getTimeSeriesOption = (stackedData: StackedSeriesData): EChartsOption => ({
-  animation: false, // ★ ここに追加
+  animation: false,
   tooltip: {
-    trigger: 'item', // ピンポイント表示
+    trigger: 'item',
     ...baseTooltip,
-    // biome-ignore lint/suspicious/noExplicitAny: <あとで修正>
-    formatter: (params: any) => {
-      const color = params.color;
-      const regionName = params.seriesName;
-      const value = params.value;
-      const date = params.name;
+    formatter: (params: unknown) => {
+      const p = params as { color: string; seriesName: string; value: number; name: string };
+      const { color, seriesName, value, name: date } = p;
 
       return `
         <div style="min-width: 120px;">
           <div style="font-size:10px; color:#a1a1aa; margin-bottom:4px;">${date}</div>
-
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-             ${getMarker(color as string)}
+             ${getMarker(color)}
              <span style="font-size:13px; font-weight:bold; color:#fff; max-width:180px; white-space:normal; line-height:1.2;">
-               ${regionName}
+               ${seriesName}
              </span>
           </div>
-
           <div style="background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
             <span style="font-size:11px; color:#a1a1aa;">Events:</span>
             <span style="font-size:14px; font-weight:bold; font-family:monospace; color:#fff;">${value}</span>
@@ -299,5 +306,5 @@ export const getTimeSeriesOption = (stackedData: StackedSeriesData): EChartsOpti
     '#bda29a',
     '#6e7074',
   ],
-  series: stackedData.series,
+  series: stackedData.series as BarSeriesOption[],
 });
