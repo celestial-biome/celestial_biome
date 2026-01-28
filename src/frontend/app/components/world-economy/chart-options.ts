@@ -6,7 +6,7 @@ import { COUNTRY_COLORS, COUNTRY_ORDER } from './utils';
 
 /**
  * EChartsのLineSeries型をベースに、nameを必須にした型
- * これにより formatSeries 内での名前参照が安全になります
+ * これにより formatSeries 内での名前参照が安全
  */
 type ChartSeries = LineSeriesOption & {
   name: string;
