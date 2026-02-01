@@ -21,12 +21,12 @@ jobs:
       id-token: 'write'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # 1. Google Cloud 認証 (Staging用)
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+        uses: 'google-github-actions/auth@v3'
         with:
           # Staging用のWIFプロバイダーを指定する必要があります
           # 形式: projects/{PROJECT_NUMBER}/locations/global/workloadIdentityPools/celestial-pool-staging/providers/gh-provider-cloudshell
@@ -41,7 +41,7 @@ jobs:
 
       # 3. Build & Push (Backend)
       - name: Build and Push Backend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./src/backend
           file: ./src/backend/Dockerfile
@@ -72,7 +72,7 @@ jobs:
 
       # 4. Deploy to Cloud Run (Backend) - サービス名に -staging を追加
       - name: Deploy Backend
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: celestial-backend-staging
           region: ${{ env.REGION }}
@@ -86,7 +86,7 @@ jobs:
 
       # 5. Build & Push (Frontend)
       - name: Build and Push Frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./src/frontend
           file: ./src/frontend/Dockerfile
@@ -112,7 +112,7 @@ jobs:
 
       # 6. Deploy to Cloud Run (Frontend) - サービス名に -staging を追加
       - name: Deploy Frontend
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: celestial-frontend-staging
           region: ${{ env.REGION }}
