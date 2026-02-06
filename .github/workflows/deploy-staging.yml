@@ -12,6 +12,8 @@ env:
   # Terraformの出力結果や命名規則に基づいて設定します。
   # もしGitHub Secretsに 'STAGING_WIF_PROVIDER' 等で登録している場合は ${{ secrets.STAGING_... }} を使ってください。
   SA_EMAIL: github-actions-sa-staging@celestial-biome-480601.iam.gserviceaccount.com
+  # ステージング用の推論APIのURL
+  STAGING_INFERENCE_API_URL: ${{ secrets.STAGING_INFERENCE_API_URL }}
 
 jobs:
   build-and-deploy:
@@ -77,6 +79,8 @@ jobs:
           service: celestial-backend-staging
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
+          env_vars: |
+            INFERENCE_API_URL=${{ env.STAGING_INFERENCE_API_URL }}
 
       # BackendのURLを環境変数にセットする (Staging用ドメイン)
       - name: Set Backend URL
