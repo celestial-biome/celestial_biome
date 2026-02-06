@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import EarthquakeDashboard from './components/earthquake';
 import type { Earthquake } from './components/earthquake/utils';
+import CelestialChat from './components/inference/CelestialChat';
 import SpaceWeatherDashboard from './components/space-weather';
 import type { WeatherData } from './components/space-weather/utils';
 import WorldEconomyDashboard from './components/world-economy';
@@ -113,6 +114,10 @@ export default async function Home() {
             )}
           </LinkCard>
         </div>
+      </div>
+      {/* 推論 UI を追加 */}
+      <div className="max-w-4xl mx-auto">
+        <CelestialChat />
       </div>
     </main>
   );

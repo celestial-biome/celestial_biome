@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 // 環境変数がない場合はローカル開発用の値をデフォルトに使う
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000';
+const BACKEND_URL = process.env.INTERNAL_API_URL || 'http://backend:8000';
 
 export async function GET(
   request: NextRequest,
@@ -19,31 +19,46 @@ export async function GET(
   const targetUrl = `${BACKEND_URL}/api/${path}/${searchParams}`;
 
   console.log(`[Proxy] Forwarding request to: ${targetUrl}`);
+  return await forwardRequest(targetUrl, 'GET', request);
+}
 
+// POST ハンドラー (チャット用)
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string[] }> },
+) {
+  const { slug } = await params;
+  const path = slug.join('/');
+  const targetUrl = `${BACKEND_URL}/api/${path}/`; // Djangoは末尾スラッシュが必要
+
+  console.log(`[Proxy-POST] Forwarding to: ${targetUrl}`);
+
+  const body = await request.json();
+  return await forwardRequest(targetUrl, 'POST', request, body);
+}
+
+// 共通の転送ロジック
+async function forwardRequest(url: string, method: string, request: NextRequest, body?: unknown) {
   try {
-    // 4. バックエンドへリクエスト
-    const res = await fetch(targetUrl, {
-      method: 'GET',
+    const res = await fetch(url, {
+      method,
       headers: {
         'Content-Type': 'application/json',
+        // クライアントからの Authorization ヘッダーをそのまま Django へ引き継ぐ
+        Authorization: request.headers.get('Authorization') || '',
       },
-      cache: 'no-store', // キャッシュしない
+      body: body ? JSON.stringify(body) : undefined,
     });
 
     if (!res.ok) {
-      console.error(`[Proxy] Backend returned error: ${res.status}`);
-      return NextResponse.json(
-        { error: `Backend error: ${res.statusText}` },
-        { status: res.status },
-      );
+      const errorData = await res.json().catch(() => ({}));
+      return NextResponse.json(errorData, { status: res.status });
     }
 
     const data = await res.json();
-
-    // 5. フロントエンドへ結果を返す
     return NextResponse.json(data);
   } catch (error) {
-    console.error('[Proxy] Connection failed:', error);
-    return NextResponse.json({ error: 'Failed to connect to backend' }, { status: 500 });
+    console.error(`[Proxy] Error:`, error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

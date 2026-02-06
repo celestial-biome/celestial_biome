@@ -1,6 +1,13 @@
 import { auth } from './firebase';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// サーバーサイド(Node.js)かクライアントサイド(Browser)かを判定
+const isServer = typeof window === 'undefined';
+
+// 環境に応じて URL を切り替える
+// サーバーサイドなら内部ネットワーク名(backend)を使用
+const BASE_URL = isServer
+  ? process.env.INTERNAL_API_URL || 'http://backend:8000'
+  : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 type FetchOptions = Omit<RequestInit, 'headers'> & {
   headers?: Record<string, string>;
