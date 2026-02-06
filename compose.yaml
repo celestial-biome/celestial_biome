@@ -1,4 +1,23 @@
 services:
+
+  inference:
+    build:
+      # celestial_biome から見て 1 つ上の階層にある celestial-inference を指定
+      context: ../celestial-inference/src/backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      # ホットリロードを有効にするため、別リポジトリのパスをマウント
+      - ../celestial-inference/src/backend:/app
+      - ~/.config/gcloud/application_default_credentials.json:/tmp/keys/gcp-creds.json:ro
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/gcp-creds.json
+      - GOOGLE_CLOUD_PROJECT=celestial-biome-480601
+    ports:
+      - "8001:8000"
+    # 他のコンテナから名前解決できるように service 名を固定
+    networks:
+      - default
+
   # --- Backend (Django) ---
   backend:
     build:
@@ -20,6 +39,9 @@ services:
       # Pythonに .pyc ファイル（バイトコード）を書き出させない設定
       - PYTHONDONTWRITEBYTECODE=1
 
+      # Django が FastAPI を見つけるための名前解決設定を追加
+      - INFERENCE_API_URL=http://inference:8000
+
       - DJANGO_SECRET_KEY=dev_secret_key
       - DEBUG=True
       # "db" はこのファイル内のサービス名を指します。Docker内部DNSが名前解決をしてくれます。
@@ -32,10 +54,15 @@ services:
       # チーム開発でプロジェクトIDが変わる場合などに便利です。
       - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
     depends_on:
+      inference:
+        condition: service_started
+
       db:
         # 【重要】単にdbが起動するのを待つだけでなく、「ヘルスチェックがOKになるまで」待ちます。
         # これにより「DBは起動したけど接続準備ができてなくてDjangoが落ちる」現象を防げます。
         condition: service_healthy
+
+
 
   # --- Frontend (Next.js) ---
   frontend:
@@ -55,6 +82,8 @@ services:
     env_file:
       - .env
     environment:
+      # ブラウザが Django を叩くための URL (ホストマシンから見た URL)
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
       # Docker内部ネットワークでのBackendアドレス
       - INTERNAL_API_URL=http://backend:8000
       # Windowsや一部のLinux/Mac環境で、ファイルの変更検知がうまく動かない場合の保険。
