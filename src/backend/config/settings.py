@@ -188,9 +188,6 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
-# 'backend' (Dockerサービス名) を追加
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "0.0.0.0"]
-
 # Django REST Framework の設定
 REST_FRAMEWORK = {
     # スキーマ生成クラスとして drf-spectacular を指定
