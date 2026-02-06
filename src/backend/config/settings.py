@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "geology.apps.GeologyConfig",
     "economy.apps.EconomyConfig",
     "accounts.apps.AccountsConfig",
+    "api.apps.ApiConfig",
 ]
 
 MIDDLEWARE = [
@@ -166,6 +167,7 @@ FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 CORS_ALLOWED_ORIGINS = [
     FRONTEND_URL,  # 環境変数から動的に追加
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 # CSRF設定: 新しいドメインでの管理画面ログインを許可
@@ -175,6 +177,19 @@ CSRF_TRUSTED_ORIGINS = [
     "https://api.celestial-biome.com",  # 本番 (念のため維持)
     "https://api-staging.celestial-biome.com",  # Staging (念のため維持)
 ]
+
+# Firebase トークンを通すために Authorization ヘッダーを許可
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+# 'backend' (Dockerサービス名) を追加
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "0.0.0.0"]
 
 # Django REST Framework の設定
 REST_FRAMEWORK = {
