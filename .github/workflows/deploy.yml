@@ -8,6 +8,7 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: asia-northeast1
   REPO_NAME: app-repo
+  INFERENCE_API_URL: ${{ secrets.PROD_INFERENCE_API_URL }}
 
 jobs:
   build-and-deploy:
@@ -70,6 +71,8 @@ jobs:
           service: celestial-backend
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
+          env_vars: |
+            INFERENCE_API_URL=${{ secrets.PROD_INFERENCE_API_URL }}
 
       # BackendのURLを環境変数にセットする (カスタムドメインを指定)
       - name: Set Backend URL
