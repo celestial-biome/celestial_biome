@@ -15,6 +15,31 @@ By visualizing the synthesis of elements that influence human life—ranging fro
 
 Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと厳格な運用ルールに基づき開発しています。
 
+## 🌌 Structured RAG for Multi-Domain Correlation
+
+本プロジェクトの核心は、単なる LLM チャットではなく、「構造化 RAG (Structured RAG)」 を用いた多角的な相関分析にあります。
+
+1. 概念：なぜ "Structured" なのか？
+一般的な RAG は PDF や Wiki などの「非構造化テキスト」をベクトル検索しますが、本システムは BigQuery 上の「構造化数値データ」 を直接参照します。
+
+    - 精度 (Precision): ベクトル検索のような「曖昧な近さ」ではなく、SQL による「厳密な数値」をコンテキストとして注入するため、ハルシネーション（嘘）を極限まで抑制します。
+
+    - 最新性 (Freshness): ETL パイプラインによって常に更新される最新の観測データを、デプロイなしで即座に推論に反映します。
+
+2. 多領域相関 (Multi-Domain Correlation)
+一見無関係に見える 3 つのドメインを、LLM の高度な推論能力を用いて結合します。
+
+    |ドメイン|ソースデータ|役割|
+    | ------------------- | --------------------- | ----------- |
+    |Space|太陽風, Kp 指数, 電離圏状況|地球環境へのポテンシャルな影響の特定|
+    |Earth|地震の規模 (M), 震源の深さ, 発生場所|地質学的な活動状態の把握|
+    |Society|株価指数, 為替, 主要経済指標|人間の社会・経済活動の心理的バイアス|
+
+3. 特異点の抽出 (Singularity Detection)
+これら 3 層のデータを Gemini 2.0 のコンテキスト窓に統合し、「データ間の非自明な相関関係」 や 「質的な転換点（特異点）」 を言語化します。
+
+    例えば・・・ 「強い地磁気嵐が発生している最中に、特定の地域で群発地震が発生し、同時に市場のボラティリティが高まっている」といった状況を、客観的エビデンス（Evidence Chips）と共に提示します。
+
 ## 🌍 Production Environment
 
 本プロジェクトは、開発の安全性と品質を担保するため、**Staging** と **Production** の完全分離構成を採用しています。
@@ -383,7 +408,7 @@ gitGraph
    commit id: "Hotfix"
    checkout main
    merge staging tag: "v1.0.1" type: HIGHLIGHT
-   ```
+```
 
    ### グラフの解説
 
