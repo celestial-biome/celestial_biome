@@ -29,6 +29,26 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 - **Frontend (App):** https://app-staging.celestial-biome.com
 - **Backend (API):** https://api-staging.celestial-biome.com
 
+## 💎 Key Features: Celestial Insights
+一見無関係に見えるデータ群から、Vertex AI (Gemini 2.0) を用いて「特異点」を抽出する相関推論機能を実装しました。　　
+⚠️※要改善が必要
+
+これらの機能は **celestial-inference** リポジトリで実装しており API で本リポジトリと連携しいる
+
+### 🌌 相関推論チャット (CelestialChat)
+宇宙天気・地震活動・世界経済の最新データを背景知識として持つ AI アドバイザー。
+* **Evidence-Based Response**: BigQuery から抽出された 24 時間以内の実数値を「証拠」としてプロンプトに注入。
+* **Integrated UI**: 推論に使用された具体的なデータ（Kp指数、地震規模、経済指標）を、独自のアイコンチップとして可視化。
+* **Secure Connection**: Backend 経由で推論エンジン (FastAPI) と通信し、Firebase Auth によるアクセス制御を完備。
+
+### 🛠 推論スタック
+* **Model**: Gemini 2.0 Flash (Vertex AI)
+* **Engine**: FastAPI (celestial-inference)
+* **Data Bridge**: Google BigQuery (3-table synthesis)
+* **Custom Domains**:
+    - Production: `inference.celestial-biome.com`
+    - Staging: `inference-staging.celestial-biome.com`
+
 ## 🏗 Architecture & Tech Stack
 
 本プロジェクトは以下の技術スタックとバージョンを厳守して開発されています。
@@ -230,27 +250,39 @@ graph LR
             Sync_Jobs["Cloud Run Jobs<br>Sync Pipelines"]
             Backend["Cloud Run Service<br>Django API"]
             Frontend["Cloud Run Service<br>Next.js UI"]
+            Inference["Cloud Run Service<br>FastAPI (Inference)"]
         end
 
         subgraph Storage[Data Storage]
             BQ[("BigQuery<br>Data Warehouse")]
             SQL[("Cloud SQL<br>PostgreSQL<br>Data Mart")]
         end
+
+        subgraph AI[AI & LLM]
+            Gemini["Vertex AI<br>Gemini 2.0 Flash"]
+        end
     end
 
     %% Scheduling
-    Scheduler -- "Trigger (Various Schedules)" --> Ingest_Jobs
-    Scheduler -- "Trigger (Post-Ingest)" --> Sync_Jobs
+    Scheduler -- "Trigger" --> Ingest_Jobs
+    Scheduler -- "Trigger" --> Sync_Jobs
 
     %% Data Flow (ETL)
     NOAA & USGS & Econ -. "Fetch API" .-> Ingest_Jobs
     Ingest_Jobs -- "Store Raw Data" --> BQ
-    Sync_Jobs -- "Query Aggregates" --> BQ
-    Sync_Jobs -- "Upsert (Refresh)" --> SQL
+    Sync_Jobs -- "Query" --> BQ
+    Sync_Jobs -- "Upsert" --> SQL
 
-    %% Application Flow
-    Frontend -- "HTTPS (JSON)" --> Backend
-    Backend -- "Query (Fast)" --> SQL
+    %% Application Flow (Standard)
+    Frontend -- "HTTPS" --> Backend
+    Backend -- "Query" --> SQL
+
+    %% Inference Flow (Core Insight)
+    Backend -- "Internal API Request" --> Inference
+    Inference -- "Fetch Evidence (3-Table)" --> BQ
+    Inference -- "Synthesis Prompt" --> Gemini
+    Gemini -- "Insights" --> Inference
+    Inference -- "JSON Response with Context" --> Backend
 ```
 **参考（NOAA Space Weather）**
 1.  **Ingestion (ETL)**: Cloud Run Job (`ingest_space_weather`) が NOAA からデータを取得し、**BigQuery** に蓄積 (毎時 0 分実行)。
