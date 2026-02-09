@@ -672,6 +672,15 @@ resource "google_cloud_run_v2_job" "migrate_job" {
             }
           }
         }
+        env {
+          name = "DJANGO_SECRET_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.django_secret_key.secret_id
+              version = "latest"
+            }
+          }
+        }
 
         volume_mounts {
           name       = "cloudsql"

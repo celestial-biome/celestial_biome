@@ -3,6 +3,7 @@ from pathlib import Path
 
 import dj_database_url
 import sentry_sdk
+from django.core.exceptions import ImproperlyConfigured
 from sentry_sdk.integrations.django import DjangoIntegration
 
 # Terraform (Cloud Run) で設定された SENTRY_DSN がある場合のみ有効化
@@ -32,12 +33,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# 環境変数がない場合はデフォルト値（開発用）を使用
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-dev-key")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # 環境変数が 'True' の場合のみ True になる
 DEBUG = os.environ.get("DEBUG") == "True"
+
+# 本番環境でSECRET_KEYが設定されていない場合は安全のため起動を停止する
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-dev-key"
+    else:
+        raise ImproperlyConfigured("The DJANGO_SECRET_KEY environment variable must be set in production.")
+
 
 # DockerやLBからのアクセスを許可するために環境変数から取得
 # 開発中はとりあえず '*' (全許可) でも動くが、以下のように書くとスマート

@@ -44,7 +44,7 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
     "attribute.repository" = "assertion.repository"
   }
 
-  attribute_condition = "assertion.sub.startsWith('repo:')"
+  attribute_condition = "assertion.repository == 'celestial-biome/celestial_biome'"
 
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"
@@ -97,6 +97,30 @@ resource "google_project_service" "extra_apis" {
 resource "random_password" "db_password" {
   length  = 16
   special = false # 記号を含めると接続文字列でトラブルになることがあるため今回はオフ
+}
+
+# -----------------------------------------------------
+# 6-1. Django SECRET_KEY の設定
+# -----------------------------------------------------
+
+# Django SECRET_KEY 用のランダム文字列生成
+resource "random_password" "django_secret" {
+  length  = 50
+  special = true
+}
+
+# Secret Manager に保存
+resource "google_secret_manager_secret" "django_secret_key" {
+  secret_id = "django-secret-key${local.suffix}"
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.extra_apis]
+}
+
+resource "google_secret_manager_secret_version" "django_secret_key_version" {
+  secret      = google_secret_manager_secret.django_secret_key.id
+  secret_data = random_password.django_secret.result
 }
 
 # -----------------------------------------------------
@@ -231,6 +255,16 @@ resource "google_cloud_run_v2_service" "backend" {
         value_source {
           secret_key_ref {
             secret  = google_secret_manager_secret.db_password_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
+      # Django SECRET_KEY を注入
+      env {
+        name = "DJANGO_SECRET_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.django_secret_key.secret_id
             version = "latest"
           }
         }

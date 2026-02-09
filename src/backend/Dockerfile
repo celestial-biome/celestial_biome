@@ -23,7 +23,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY . .
 
 # ビルド時はDB接続などもなく SECRET_KEY もないので、ダミーを入れて通します
-RUN SECRET_KEY=dummy_for_build \
+RUN DJANGO_SECRET_KEY=dummy_for_build \
     uv run python manage.py collectstatic --noinput
 
 # 起動コマンド
