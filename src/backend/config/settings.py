@@ -181,6 +181,7 @@ CORS_ALLOWED_ORIGINS = [
 # CSRF設定: 新しいドメインでの管理画面ログインを許可
 CSRF_TRUSTED_ORIGINS = [
     FRONTEND_URL,  # Frontend (app-...)
+    "https://*.run.app",
     f"https://{ALLOWED_HOSTS[0]}",  # Backend自身 (api-...) も許可しておくと安心
     "https://api.celestial-biome.com",  # 本番 (念のため維持)
     "https://api-staging.celestial-biome.com",  # Staging (念のため維持)

@@ -231,7 +231,7 @@ resource "google_cloud_run_v2_service" "backend" {
       # Djangoが "400 Bad Request" を返してブロックします。
       env {
         name  = "ALLOWED_HOSTS"
-        value = var.env_name == "production" ? "api.celestial-biome.com,localhost,127.0.0.1" : "api-staging.celestial-biome.com,localhost,127.0.0.1"
+        value = var.env_name == "production" ? ".run.app,api.celestial-biome.com,localhost,127.0.0.1" : ".run.app,api-staging.celestial-biome.com,localhost,127.0.0.1"
       }
       env {
         name  = "DEBUG"
@@ -313,7 +313,11 @@ resource "google_cloud_run_v2_service" "backend" {
     ]
   }
 
-  depends_on = [google_project_iam_member.run_secret_access, google_project_iam_member.run_sql_client]
+  depends_on = [
+    google_project_iam_member.run_secret_access,
+    google_project_iam_member.run_sql_client,
+    google_secret_manager_secret_version.django_secret_key_version
+  ]
 }
 
 # -----------------------------------------------------
