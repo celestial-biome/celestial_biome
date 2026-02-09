@@ -96,6 +96,15 @@ resource "google_cloud_run_v2_job" "ingest_job" {
           }
         }
         env {
+          name = "DJANGO_SECRET_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.django_secret_key.secret_id
+              version = "latest"
+            }
+          }
+        }
+        env {
           name  = "BQ_DATASET_ID"
           value = var.env_name == "production" ? "celestial_biome_data" : "celestial_biome_data_staging"
         }
@@ -184,6 +193,15 @@ resource "google_cloud_run_v2_job" "sync_db_job" {
           value_source {
             secret_key_ref {
               secret  = google_secret_manager_secret.db_password_secret.secret_id
+              version = "latest"
+            }
+          }
+        }
+        env {
+          name = "DJANGO_SECRET_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.django_secret_key.secret_id
               version = "latest"
             }
           }
@@ -289,6 +307,15 @@ resource "google_cloud_run_v2_job" "ingest_earthquakes_job" {
           }
         }
         env {
+          name = "DJANGO_SECRET_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.django_secret_key.secret_id
+              version = "latest"
+            }
+          }
+        }
+        env {
           name  = "BQ_DATASET_ID"
           value = var.env_name == "production" ? "celestial_biome_data" : "celestial_biome_data_staging"
         }
@@ -378,6 +405,15 @@ resource "google_cloud_run_v2_job" "sync_earthquakes_job" {
           value_source {
             secret_key_ref {
               secret  = google_secret_manager_secret.db_password_secret.secret_id
+              version = "latest"
+            }
+          }
+        }
+        env {
+          name = "DJANGO_SECRET_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.django_secret_key.secret_id
               version = "latest"
             }
           }
@@ -482,6 +518,15 @@ resource "google_cloud_run_v2_job" "ingest_economy_job" {
           }
         }
         env {
+          name = "DJANGO_SECRET_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.django_secret_key.secret_id
+              version = "latest"
+            }
+          }
+        }
+        env {
           name  = "BQ_DATASET_ID"
           value = var.env_name == "production" ? "celestial_biome_data" : "celestial_biome_data_staging"
         }
@@ -571,6 +616,15 @@ resource "google_cloud_run_v2_job" "sync_economy_job" {
           value_source {
             secret_key_ref {
               secret  = google_secret_manager_secret.db_password_secret.secret_id
+              version = "latest"
+            }
+          }
+        }
+        env {
+          name = "DJANGO_SECRET_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.django_secret_key.secret_id
               version = "latest"
             }
           }
@@ -696,6 +750,9 @@ resource "google_cloud_run_v2_job" "migrate_job" {
       }
     }
   }
+  depends_on = [
+    google_secret_manager_secret_version.django_secret_key_version
+  ]
 
   lifecycle {
     ignore_changes = [
@@ -769,6 +826,15 @@ resource "google_cloud_run_v2_job" "create_superuser_job" {
           value_source {
             secret_key_ref {
               secret  = google_secret_manager_secret.db_password_secret.secret_id
+              version = "latest"
+            }
+          }
+        }
+        env {
+          name = "DJANGO_SECRET_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.django_secret_key.secret_id
               version = "latest"
             }
           }
