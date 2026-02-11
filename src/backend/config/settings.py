@@ -6,10 +6,29 @@ import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 from sentry_sdk.integrations.django import DjangoIntegration
 
+# SECURITY WARNING: don't run with debug turned on in production!
+# 環境変数が 'True' の場合のみ True になる
+DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "t")
+
 # Cloud Run 用の SSL 設定
-# Django は "http" と誤認し、"https" の Origin を拒否する
-SECURE_PROXY_SSL_HEADER: tuple[str, str] | None = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT: bool = True
+# 本番環境 (DEBUG=False) では HTTPS を強制し、ローカル (DEBUG=True) では無効化する
+if not DEBUG:
+    # 本番環境
+    SECURE_PROXY_SSL_HEADER: tuple[str, str] | None = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT: bool = True
+    SESSION_COOKIE_SECURE: bool = True
+    CSRF_COOKIE_SECURE: bool = True
+else:
+    # ローカル開発環境 (ここが重要！)
+    SECURE_PROXY_SSL_HEADER = None
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+    # 追加: HSTS (HTTP Strict Transport Security) も無効化してリダイレクトを防ぐ
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
 
 # Terraform (Cloud Run) で設定された SENTRY_DSN がある場合のみ有効化
 if os.environ.get("SENTRY_DSN"):
@@ -40,9 +59,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# 環境変数が 'True' の場合のみ True になる
-DEBUG = os.environ.get("DEBUG") == "True"
 
 # 本番環境でSECRET_KEYが設定されていない場合は安全のため起動を停止する
 if not SECRET_KEY:
