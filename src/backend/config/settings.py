@@ -19,13 +19,13 @@ if not DEBUG:
     SESSION_COOKIE_SECURE: bool = True
     CSRF_COOKIE_SECURE: bool = True
 else:
-    # ローカル開発環境 (ここが重要！)
+    # ローカル開発環境
     SECURE_PROXY_SSL_HEADER = None
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
-    # 追加: HSTS (HTTP Strict Transport Security) も無効化してリダイレクトを防ぐ
+    # HSTS (HTTP Strict Transport Security) も無効化してリダイレクトを防ぐ
     SECURE_HSTS_SECONDS = 0
     SECURE_HSTS_INCLUDE_SUBDOMAINS = False
     SECURE_HSTS_PRELOAD = False
