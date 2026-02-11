@@ -8,8 +8,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 # Cloud Run 用の SSL 設定
 # Django は "http" と誤認し、"https" の Origin を拒否する
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = True  # 常時HTTPS化
+SECURE_PROXY_SSL_HEADER: tuple[str, str] | None = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT: bool = True
 
 # Terraform (Cloud Run) で設定された SENTRY_DSN がある場合のみ有効化
 if os.environ.get("SENTRY_DSN"):
