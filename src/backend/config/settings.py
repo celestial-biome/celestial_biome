@@ -6,6 +6,11 @@ import sentry_sdk
 from django.core.exceptions import ImproperlyConfigured
 from sentry_sdk.integrations.django import DjangoIntegration
 
+# Cloud Run 用の SSL 設定
+# Django は "http" と誤認し、"https" の Origin を拒否する
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = True  # 常時HTTPS化
+
 # Terraform (Cloud Run) で設定された SENTRY_DSN がある場合のみ有効化
 if os.environ.get("SENTRY_DSN"):
     sentry_sdk.init(
@@ -47,9 +52,10 @@ if not SECRET_KEY:
         raise ImproperlyConfigured("The DJANGO_SECRET_KEY environment variable must be set in production.")
 
 
-# DockerやLBからのアクセスを許可するために環境変数から取得
-# 開発中はとりあえず '*' (全許可) でも動くが、以下のように書くとスマート
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
+# ALLOWED_HOSTS のパース処理
+# Terraform から "host1,host2" という文字列で来るので、リストに変換が必要
+env_hosts = os.environ.get("ALLOWED_HOSTS", ".run.app,localhost")
+ALLOWED_HOSTS = [host.strip() for host in env_hosts.split(",") if host.strip()]
 if DEBUG:
     ALLOWED_HOSTS += ["*"]
 
