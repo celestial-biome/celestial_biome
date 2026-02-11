@@ -25,6 +25,9 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
+  # 課金プロジェクトを明示して API エラーを防ぐ
+  user_project_override = true
+  billing_project       = var.project_id
 }
 
 provider "google-beta" {

@@ -7,8 +7,9 @@ resource "google_project_service" "apis" {
     "cloudresourcemanager.googleapis.com",
     "sqladmin.googleapis.com",
     "compute.googleapis.com",
-    "firebase.googleapis.com",           # Firebase Management API
-    "identitytoolkit.googleapis.com",    # Identity Platform (Auth)
+    "firebase.googleapis.com",        # Firebase Management API
+    "identitytoolkit.googleapis.com", # Identity Platform (Auth)
+    "apikeys.googleapis.com",
   ])
   service            = each.key
   disable_on_destroy = false
@@ -151,7 +152,7 @@ resource "google_sql_database_instance" "postgres" {
   deletion_protection = false
 
   settings {
-    tier = "db-f1-micro"
+    tier    = "db-f1-micro"
     edition = "ENTERPRISE"
 
     ip_configuration {
@@ -211,7 +212,7 @@ resource "google_project_iam_member" "run_sql_client" {
 # 12. Cloud Run (Backend - Django)
 # -----------------------------------------------------
 resource "google_cloud_run_v2_service" "backend" {
-  name = "celestial-backend${local.suffix}"
+  name     = "celestial-backend${local.suffix}"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL" # 公開設定
 
@@ -324,7 +325,7 @@ resource "google_cloud_run_v2_service" "backend" {
 # 13. Cloud Run (Frontend - Next.js)
 # -----------------------------------------------------
 resource "google_cloud_run_v2_service" "frontend" {
-  name = "celestial-frontend${local.suffix}"
+  name     = "celestial-frontend${local.suffix}"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
@@ -485,8 +486,42 @@ data "google_firebase_web_app_config" "frontend" {
 resource "google_project_iam_member" "backend_firebase_viewer" {
   project = var.project_id
   # ユーザー情報の参照権限 (verify_id_token等で必要になる場合がある)
-  role    = "roles/firebaseauth.viewer"
-  member  = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+  role   = "roles/firebaseauth.viewer"
+  member = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+}
+
+# -----------------------------------------------------
+# 20. API Key Restriction (Browser Key)
+# -----------------------------------------------------
+resource "google_apikeys_key" "firebase_key" {
+  # env_name が 'staging' の時だけ管理する（または 'prod' だけ管理する）
+  count        = var.env_name == "staging" ? 1 : 0
+  name         = "firebase-api-key${local.suffix}"        # Terraform上の識別名
+  display_name = "Browser key (auto created by Firebase)"
+  project      = var.project_id
+
+  restrictions {
+    browser_key_restrictions {
+      allowed_referrers = [
+        "https://app.celestial-biome.com/*",
+        "https://app-staging.celestial-biome.com/*",
+        "http://localhost:3000/*",
+        "https://celestial-biome-480601.firebaseapp.com/*",
+        "https://celestial-biome-480601.web.app/*",
+        "https://*.run.app/*"
+      ]
+    }
+
+    # 許可するAPI (Identity ToolkitなどがFirebase Authに必須)
+    api_targets {
+      service = "identitytoolkit.googleapis.com"
+    }
+    api_targets {
+      service = "firebase.googleapis.com"
+    }
+  }
+
+  depends_on = [google_project_service.apis]
 }
 
 # -----------------------------------------------------
