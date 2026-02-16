@@ -58,7 +58,8 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 - **Backend (API):** https://api-staging.celestial-biome.com
 
 ## 💎 Key Features: Celestial Insights
-一見無関係に見えるデータ群から、Vertex AI (Gemini 2.0) を用いて「特異点」を抽出する相関推論機能を実装しました。　　
+一見無関係に見えるデータ群から、Vertex AI (Gemini 2.0) を用いて「特異点」を抽出する相関推論機能を実装しました。
+　
 ⚠️※要改善が必要
 
 これらの機能は **celestial-inference** リポジトリで実装しており API で本リポジトリと連携しいる
