@@ -18,6 +18,10 @@ if not DEBUG:
     SECURE_SSL_REDIRECT: bool = True
     SESSION_COOKIE_SECURE: bool = True
     CSRF_COOKIE_SECURE: bool = True
+    # HSTS: 1年間 HTTPS を強制
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 else:
     # ローカル開発環境
     SECURE_PROXY_SSL_HEADER = None

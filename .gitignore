@@ -5,3 +5,6 @@ src/backend/data/*.bsp
 src/backend/staticfiles
 src/backend/.env
 .env
+# サブディレクトリの .env 系も確実に無視（誤コミット防止）
+**/.env*
+docs/
