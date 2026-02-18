@@ -18,6 +18,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Celestial Biome',
   description: 'Visualize the rhythm of the planet and cosmos.',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/favicon.ico', // スマホ用にも favicon.ico を使用（apple-touch-icon.png があればそちらを推奨）
+  },
 };
 
 export default function RootLayout({
