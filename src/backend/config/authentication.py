@@ -1,9 +1,13 @@
+import logging
+
 import firebase_admin
 from django.contrib.auth import get_user_model
 from firebase_admin import auth
 from rest_framework import authentication, exceptions
 
 from accounts.models import UserActivityLog
+
+logger = logging.getLogger(__name__)
 
 # Firebase Admin SDK の初期化 (シングルトン)
 # Cloud Run や ローカル(ADC) 環境では、credentials引数なしで自動的に認証情報を取得します
@@ -31,7 +35,8 @@ class FirebaseAuthentication(authentication.BaseAuthentication):
             email = decoded_token.get("email", "")
             name = decoded_token.get("name", "") or decoded_token.get("picture", "")  # 必要ならアイコンなども
         except Exception as e:
-            raise exceptions.AuthenticationFailed(f"Invalid Firebase token: {str(e)}") from e
+            logger.warning("Firebase token verification failed: %s", e)
+            raise exceptions.AuthenticationFailed("Invalid or expired token.") from e
 
         if not uid:
             raise exceptions.AuthenticationFailed('Token contained no "uid"')
