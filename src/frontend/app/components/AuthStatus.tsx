@@ -8,7 +8,7 @@ import { fetchWithAuth } from '@/lib/api-client';
 import { auth } from '@/lib/firebase';
 
 export default function AuthStatus() {
-  const { user, loading } = useAuth();
+  const { user, displayName: contextDisplayName, loading } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -48,7 +48,7 @@ export default function AuthStatus() {
               <div className="hidden sm:flex flex-col items-end mr-2">
                 <span className="text-xs text-gray-500 uppercase tracking-wider">Logged in as</span>
                 <span className="text-sm font-medium text-gray-300 font-mono">
-                  {user.displayName || user.email}
+                  {contextDisplayName ?? user.displayName ?? user.email}
                 </span>
               </div>
 

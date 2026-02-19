@@ -1,10 +1,18 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: { '@': path.resolve(__dirname) },
+  },
   test: {
-    environment: 'jsdom', // ここで仮想ブラウザ環境を指定
-    include: ['**/*.test.{ts,tsx}'], // テストファイルの対象
+    environment: 'jsdom',
+    include: ['**/*.test.{ts,tsx}'],
+    setupFiles: ['./vitest.setup.ts'],
   },
 });
