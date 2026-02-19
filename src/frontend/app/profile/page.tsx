@@ -20,7 +20,7 @@ import {
 } from '../components/ui/CelestialCard';
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
 
   const [displayName, setDisplayName] = useState('');
@@ -64,11 +64,17 @@ export default function ProfilePage() {
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
       }
 
-      // バックエンドDBへの同期
-      await fetchWithAuth('/api/user/profile', {
+      // バックエンドDBへの同期（失敗してもプロフィール更新は成功扱いでトップへ遷移）
+      fetchWithAuth('/api/user/profile', {
         method: 'PUT',
         body: JSON.stringify({ display_name: displayName }),
+      }).catch(() => {
+        // 同期失敗は無視（Firebase の更新は完了している）
       });
+
+      // ヘッダーなどの表示名を即時反映するため AuthContext を更新
+      await refreshUser();
+      router.push('/');
     } catch (err) {
       if (err instanceof FirebaseError) {
         setMessage({ type: 'error', text: `Failed to update: ${err.message}` });
