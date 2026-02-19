@@ -276,6 +276,10 @@ resource "google_cloud_run_v2_service" "backend" {
         name  = "FRONTEND_URL"
         value = var.env_name == "production" ? "https://app.celestial-biome.com" : "https://app-staging.celestial-biome.com"
       }
+      env {
+        name  = "INFERENCE_API_URL"
+        value = var.env_name == "production" ? "https://inference.celestial-biome.com" : "https://inference-staging.celestial-biome.com"
+      }
       # Sentry関連の環境変数
       env {
         name  = "SENTRY_DSN"
