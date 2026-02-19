@@ -8,3 +8,4 @@ src/backend/.env
 # サブディレクトリの .env 系も確実に無視（誤コミット防止）
 **/.env*
 docs/
+CLAUDE.md
