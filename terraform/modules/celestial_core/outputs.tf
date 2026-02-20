@@ -43,3 +43,9 @@ output "firebase_config" {
     app_id              = google_firebase_web_app.frontend.app_id
   }
 }
+
+output "sentry_frontend_dsn" {
+  description = "Sentry DSN for Frontend (Next.js)"
+  sensitive   = true
+  value       = data.sentry_key.frontend.dsn["public"]
+}

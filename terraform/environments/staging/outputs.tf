@@ -27,3 +27,9 @@ output "firebase_config" {
   value       = module.core.firebase_config
   sensitive   = true
 }
+
+output "sentry_frontend_dsn" {
+  description = "Sentry DSN for Frontend (Next.js)"
+  value       = module.core.sentry_frontend_dsn
+  sensitive   = true
+}

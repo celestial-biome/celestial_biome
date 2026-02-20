@@ -2,10 +2,10 @@ name: Deploy to Cloud Run (Staging)
 
 on:
   push:
-    branches: ['staging'] # stagingブランチへのプッシュで実行
+    branches: ['staging']
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }} # プロジェクトIDは同じ
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: asia-northeast1
   REPO_NAME: app-repo-staging
   STAGING_INFERENCE_API_URL: ${{ secrets.STAGING_INFERENCE_API_URL }}
@@ -13,19 +13,20 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 30
     permissions:
       contents: 'read'
       id-token: 'write'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
       # 1. Google Cloud 認証 (Staging用)
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+        uses: 'google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed'  # v2
         with:
-          # Staging用のWIFプロバイダーを指定する
           workload_identity_provider: ${{ secrets.STAGING_WIF_PROVIDER }}
           service_account: ${{ secrets.STAGING_WIF_SA }}
 
@@ -36,12 +37,22 @@ jobs:
 
       # 3. Build & Push (Backend)
       - name: Build and Push Backend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25  # v5
         with:
           context: ./src/backend
           file: ./src/backend/Dockerfile
           push: true
           tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
+
+      # 3b. Backend イメージの脆弱性スキャン（修正済みのCRITICALのみ対象）
+      - name: Scan Backend Image
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
+        with:
+          image-ref: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
+          format: 'table'
+          severity: 'CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
 
       # DBマイグレーションの実行 (Job名に -staging)
       - name: Run DB Migration
@@ -57,17 +68,27 @@ jobs:
         run: |
           JOBS=("ingest-space-weather-job-staging" "sync-space-weather-db-job-staging" "ingest-earthquakes-job-staging" "sync-earthquakes-db-job-staging" "ingest-economy-job-staging" "sync-economy-db-job-staging" "create-superuser-job-staging")
 
+          pids=()
           for job in "${JOBS[@]}"; do
             echo "Updating $job..."
             gcloud run jobs update "$job" \
               --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }} \
               --region ${{ env.REGION }} &
+            pids+=($!)
           done
-          wait
+
+          failed=0
+          for pid in "${pids[@]}"; do
+            wait "$pid" || failed=1
+          done
+          if [ $failed -ne 0 ]; then
+            echo "::error::One or more Cloud Run job updates failed"
+            exit 1
+          fi
 
       # 4. Deploy to Cloud Run (Backend) - サービス名に -staging を追加
       - name: Deploy Backend
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@251330ba9a8a34bfbc1622895f42e1d53fd14522  # v2
         with:
           service: celestial-backend-staging
           region: ${{ env.REGION }}
@@ -83,33 +104,38 @@ jobs:
 
       # 5. Build & Push (Frontend)
       - name: Build and Push Frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25  # v5
         with:
           context: ./src/frontend
           file: ./src/frontend/Dockerfile
           push: true
           tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}
-          # フロントエンドのビルド引数
           build-args: |
             NEXT_PUBLIC_API_URL=${{ env.BACKEND_URL }}
             SENTRY_RELEASE=${{ github.sha }}
-            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.SENTRY_FRONTEND_DSN }}
-
-            # Firebase設定
-            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
-            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
-            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
-            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
-
-          # Secrets (必要に応じてStaging用Tokenに変えることも検討)
+            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.STAGING_SENTRY_FRONTEND_DSN }}
+            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.STAGING_NEXT_PUBLIC_FIREBASE_API_KEY }}
+            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.STAGING_NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.STAGING_NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.STAGING_NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.STAGING_NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.STAGING_NEXT_PUBLIC_FIREBASE_APP_ID }}
           secrets: |
-            sentry_token=${{ secrets.SENTRY_AUTH_TOKEN }}
+            sentry_token=${{ secrets.STAGING_SENTRY_AUTH_TOKEN }}
+
+      # 5b. Frontend イメージの脆弱性スキャン（修正済みのCRITICALのみ対象）
+      - name: Scan Frontend Image
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
+        with:
+          image-ref: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}
+          format: 'table'
+          severity: 'CRITICAL'
+          ignore-unfixed: true
+          exit-code: '1'
 
       # 6. Deploy to Cloud Run (Frontend) - サービス名に -staging
       - name: Deploy Frontend
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@251330ba9a8a34bfbc1622895f42e1d53fd14522  # v2
         with:
           service: celestial-frontend-staging
           region: ${{ env.REGION }}
