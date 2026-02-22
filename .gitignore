@@ -9,3 +9,6 @@ src/backend/.env
 **/.env*
 docs/
 CLAUDE.md
+GEMINI.md
+**/GEMINI.md
+.geminiignore
