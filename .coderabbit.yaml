@@ -1,0 +1,49 @@
+# CodeRabbit Configuration
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: "ja"
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "staging"
+
+  path_instructions:
+    - path: "src/backend/**"
+      instructions: |
+        Python (Django 5.2 + DRF) のコードをレビューしてください。
+        - uv を使用しているため pip/poetry の提案は不要です
+        - Ruff によるリント・フォーマット、Ty による型チェックを前提としています
+        - テストは SQLite in-memory (config/test_settings.py) で実行されます
+        - セキュリティ: Firebase JWT 認証の実装に注意してください
+
+    - path: "src/frontend/**"
+      instructions: |
+        TypeScript (Next.js 16 App Router) のコードをレビューしてください。
+        - Biome を使用しているため ESLint/Prettier の提案は不要です
+        - Server Component と Client Component の使い分けに注意してください
+        - 型は openapi-typescript で生成されたものを使用しています
+
+    - path: "src/backend/**/migrations/**"
+      instructions: "Django マイグレーションファイルは自動生成のためレビュー不要です。"
+
+    - path: "**/*.tf"
+      instructions: "Terraform ファイルです。Google Cloud リソースの設定を確認してください。"
+
+    - path: ".github/workflows/**"
+      instructions: |
+        GitHub Actions ワークフローをレビューしてください。
+        - staging ブランチへの push でステージング環境にデプロイされます
+        - main ブランチへの push で本番環境にデプロイされます
+
+chat:
+  auto_reply: true
