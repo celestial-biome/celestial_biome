@@ -322,6 +322,52 @@ graph LR
     - **Optimization**: 取得したデータに対し、Pandas を用いて Pivot 変換（Long -> Wide）や欠損値の補完（Forward Fill）を行い、Frontend が描画しやすい形式でレスポンスします。
 4.  **Visualization**: Frontend (Next.js + Echarts) でデータを可視化。
 
+### 6. Automated Code Review (CodeRabbit)
+
+本プロジェクトでは、[CodeRabbit](https://coderabbit.ai) による AI コードレビューを導入しています。
+
+#### 概要
+
+`main` および `staging` ブランチへの Pull Request が作成・更新されると、CodeRabbit が自動でコードレビューを実施し、日本語でフィードバックを投稿します。
+
+#### 主な機能
+
+- **ウォークスルーサマリー**: PR 全体の変更内容を自動で要約
+- **ファイルごとのレビュー**: 各ファイルの変更に対してインラインコメントを投稿
+- **パス別カスタム指示**: バックエンド・フロントエンド・インフラそれぞれに適したレビュー観点を設定済み
+
+  | パス | レビュー観点 |
+  | ---- | ----------- |
+  | `src/backend/**` | Django/DRF パターン、uv、Ruff/Ty、Firebase 認証 |
+  | `src/frontend/**` | Next.js App Router、Server/Client Component、Biome |
+  | `src/backend/**/migrations/**` | 自動生成ファイルのためレビュー対象外 |
+  | `**/*.tf` | Google Cloud リソース定義の妥当性 |
+  | `.github/workflows/**` | CI/CD パイプラインの安全性と正確性 |
+
+#### 設定ファイル
+
+レビューの挙動は `.coderabbit.yaml` で管理されています。
+
+```yaml
+# .coderabbit.yaml（抜粋）
+language: "ja"
+reviews:
+  profile: "chill"
+  auto_review:
+    enabled: true
+    base_branches:
+      - "main"
+      - "staging"
+```
+
+#### CodeRabbit へのフィードバック
+
+PR のコメント欄で `@coderabbitai` に話しかけることで、追加の質問や再レビューの依頼が可能です。
+
+```text
+@coderabbitai このファイルの変更をもう一度詳しくレビューしてください。
+```
+
 ## 📚 API Documentation (Swagger UI)
 
 drf-spectacular により、OpenAPI 仕様書とインタラクティブなドキュメントが自動生成されます。 ローカル環境起動中、以下のURLからアクセス可能です。
