@@ -123,7 +123,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Database**       | Cloud SQL           | PostgreSQL 16 (App Data & Data Mart**) |
 | **Data Warehouse** | BigQuery            | Time-series data storage**             |
 | **Storage**        | Cloud Storage (GCS) | Static & Media files                     |
-| **IaC**            | Terraform           | Multi-environment management (Dev/Stage/Prod)                |
+| **IaC**            | Terraform + HCP Terraform Cloud | Infrastructure management; state managed by Terraform Cloud (VCS-Driven) |
 | **CI/CD**          | GitHub Actions      | CI, Build, Deploy                        |
 | **Monitoring**     | Sentry              | Error Tracking, Source Maps (Frontend)   |
 | **Authentication** | **Firebase Authentication** | Identity Provider (Google Login), Secure Session Management, Staging/Prod Isolation |
@@ -426,7 +426,16 @@ drf-spectacular により、OpenAPI 仕様書とインタラクティブなド�
 
 ### Deployment
 
-GitHub Actions と Terraform を連携させた、Git-Flow ベースの CI/CD パイプラインを構築しています。
+GitHub Actions によるアプリデプロイと、**HCP Terraform Cloud (VCS-Driven)** によるインフラ管理を組み合わせた、Git-Flow ベースの CI/CD パイプラインを構築しています。
+
+### Terraform Cloud
+
+インフラ（Cloud Run / Cloud SQL / BigQuery 等）は [HCP Terraform Cloud](https://app.terraform.io) の VCS-Driven Workflow で管理しています。
+
+| Workspace | Branch | 動作 |
+|---|---|---|
+| `celestial-biome-prod` | `main` | PR 時に speculative plan、マージ後に手動 apply |
+| `celestial-biome-staging` | `staging` | PR 時に speculative plan、マージ後に手動 apply |
 
 ### Deployment Workflow
 
