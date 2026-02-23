@@ -128,6 +128,8 @@ resource "google_cloud_run_v2_job" "ingest_job" {
     ignore_changes = [
       template[0].template[0].containers[0].image,
       launch_stage,
+      client,
+      client_version,
     ]
   }
 }
@@ -230,6 +232,8 @@ resource "google_cloud_run_v2_job" "sync_db_job" {
     ignore_changes = [
       template[0].template[0].containers[0].image,
       launch_stage,
+      client,
+      client_version,
     ]
   }
 }
@@ -339,6 +343,8 @@ resource "google_cloud_run_v2_job" "ingest_earthquakes_job" {
     ignore_changes = [
       template[0].template[0].containers[0].image,
       launch_stage,
+      client,
+      client_version,
     ]
   }
 }
@@ -442,6 +448,8 @@ resource "google_cloud_run_v2_job" "sync_earthquakes_job" {
     ignore_changes = [
       template[0].template[0].containers[0].image,
       launch_stage,
+      client,
+      client_version,
     ]
   }
 }
@@ -550,6 +558,8 @@ resource "google_cloud_run_v2_job" "ingest_economy_job" {
     ignore_changes = [
       template[0].template[0].containers[0].image,
       launch_stage,
+      client,
+      client_version,
     ]
   }
 }
@@ -653,6 +663,8 @@ resource "google_cloud_run_v2_job" "sync_economy_job" {
     ignore_changes = [
       template[0].template[0].containers[0].image,
       launch_stage,
+      client,
+      client_version,
     ]
   }
 }
@@ -758,6 +770,8 @@ resource "google_cloud_run_v2_job" "migrate_job" {
     ignore_changes = [
       template[0].template[0].containers[0].image,
       launch_stage,
+      client,
+      client_version,
     ]
   }
 }
@@ -859,6 +873,8 @@ resource "google_cloud_run_v2_job" "create_superuser_job" {
     ignore_changes = [
       template[0].template[0].containers[0].image,
       launch_stage,
+      client,
+      client_version,
     ]
   }
 }
