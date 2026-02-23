@@ -16,9 +16,11 @@ terraform {
       version = "~> 0.11"
     }
   }
-  backend "gcs" {
-    bucket  = "celestial-biome-tfstate"  # バケット名
-    prefix  = "env/staging"                 # フォルダ代わりのプレフィックス
+  cloud {
+    organization = "celestial-biome"
+    workspaces {
+      name = "celestial-biome-staging"
+    }
   }
 }
 
