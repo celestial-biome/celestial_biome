@@ -316,6 +316,7 @@ resource "google_cloud_run_v2_service" "backend" {
       template[0].labels,
       client,
       client_version,
+      scaling,
     ]
   }
 
@@ -366,6 +367,7 @@ resource "google_cloud_run_v2_service" "frontend" {
       template[0].labels,
       client,
       client_version,
+      scaling,
     ]
   }
 }
