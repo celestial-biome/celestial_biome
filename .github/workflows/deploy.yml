@@ -20,12 +20,12 @@ jobs:
       id-token: 'write'
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
       # 1. Google Cloud 認証
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed'  # v2
+        uses: 'google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093'  # v3.0.0
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SA }}
@@ -37,7 +37,7 @@ jobs:
 
       # 3. Build & Push (Backend)
       - name: Build and Push Backend
-        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25  # v5
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6.19.2
         with:
           context: ./src/backend
           file: ./src/backend/Dockerfile
@@ -46,7 +46,7 @@ jobs:
 
       # 3b. Backend イメージの脆弱性スキャン（修正済みのCRITICALのみ対象）
       - name: Scan Backend Image
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
+        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518  # 0.34.1
         with:
           image-ref: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
           format: 'table'
@@ -88,7 +88,7 @@ jobs:
 
       # 4. Deploy to Cloud Run (Backend)
       - name: Deploy Backend
-        uses: google-github-actions/deploy-cloudrun@251330ba9a8a34bfbc1622895f42e1d53fd14522  # v2
+        uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d  # v3.0.1
         with:
           service: celestial-backend
           region: ${{ env.REGION }}
@@ -104,7 +104,7 @@ jobs:
 
       # 5. Build & Push (Frontend)
       - name: Build and Push Frontend
-        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25  # v5
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6.19.2
         with:
           context: ./src/frontend
           file: ./src/frontend/Dockerfile
@@ -125,7 +125,7 @@ jobs:
 
       # 5b. Frontend イメージの脆弱性スキャン（修正済みのCRITICALのみ対象）
       - name: Scan Frontend Image
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
+        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518  # 0.34.1
         with:
           image-ref: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}
           format: 'table'
@@ -135,7 +135,7 @@ jobs:
 
       # 6. Deploy to Cloud Run (Frontend)
       - name: Deploy Frontend
-        uses: google-github-actions/deploy-cloudrun@251330ba9a8a34bfbc1622895f42e1d53fd14522  # v2
+        uses: google-github-actions/deploy-cloudrun@2028e2d7d30a78c6910e0632e48dd561b064884d  # v3.0.1
         with:
           service: celestial-frontend
           region: ${{ env.REGION }}
