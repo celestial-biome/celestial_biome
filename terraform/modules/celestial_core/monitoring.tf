@@ -75,11 +75,27 @@ locals {
 resource "google_monitoring_service" "backend" {
   service_id   = "celestial-backend${local.suffix}"
   display_name = "Celestial Backend API [${var.env_name}]"
+
+  basic_service {
+    service_type = "CLOUD_RUN"
+    service_labels = {
+      service_name = google_cloud_run_v2_service.backend.name
+      location     = var.region
+    }
+  }
 }
 
 resource "google_monitoring_service" "frontend" {
   service_id   = "celestial-frontend${local.suffix}"
   display_name = "Celestial Frontend [${var.env_name}]"
+
+  basic_service {
+    service_type = "CLOUD_RUN"
+    service_labels = {
+      service_name = google_cloud_run_v2_service.frontend.name
+      location     = var.region
+    }
+  }
 }
 
 # 5. 可用性 SLO (99.5%、30日ローリングウィンドウ)
