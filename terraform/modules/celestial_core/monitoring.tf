@@ -100,7 +100,7 @@ resource "google_monitoring_service" "frontend" {
 
 # 5. 可用性 SLO (99.0%、30日ローリングウィンドウ)
 #    個人開発・低トラフィック向けに 99.5% から 99.0% に緩和。
-#    good = 2xx, 3xx, 4xx レスポンス / total = 全リクエスト
+#    good = 5xx 以外のレスポンス / total = 全リクエスト
 resource "google_monitoring_slo" "backend_availability" {
   service      = google_monitoring_service.backend.service_id
   slo_id       = "backend-availability${local.suffix}"
@@ -115,7 +115,7 @@ resource "google_monitoring_slo" "backend_availability" {
         "metric.type=\"run.googleapis.com/request_count\"",
         "resource.type=\"cloud_run_revision\"",
         "resource.labels.service_name=\"${google_cloud_run_v2_service.backend.name}\"",
-        "metric.labels.response_code_class=~\"2xx|3xx|4xx\""
+        "metric.labels.response_code_class!=\"5xx\""
       ])
       total_service_filter = join(" AND ", [
         "metric.type=\"run.googleapis.com/request_count\"",
@@ -140,7 +140,7 @@ resource "google_monitoring_slo" "frontend_availability" {
         "metric.type=\"run.googleapis.com/request_count\"",
         "resource.type=\"cloud_run_revision\"",
         "resource.labels.service_name=\"${google_cloud_run_v2_service.frontend.name}\"",
-        "metric.labels.response_code_class=~\"2xx|3xx|4xx\""
+        "metric.labels.response_code_class!=\"5xx\""
       ])
       total_service_filter = join(" AND ", [
         "metric.type=\"run.googleapis.com/request_count\"",
