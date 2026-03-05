@@ -277,10 +277,10 @@ resource "google_monitoring_alert_policy" "uptime_check_alert" {
   conditions {
     display_name = "Uptime check is failing"
     condition_threshold {
-      filter     = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND check_id=\"${basename(each.value)}\""
+      filter     = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND metric.labels.check_id=\"${basename(each.value)}\""
       duration   = "300s" # 5分間失敗し続けたら発報
-      comparison = "COMPARISON_GT"
-      threshold_value = 1 # 1つ以上のリージョンで失敗
+      comparison = "COMPARISON_LT"
+      threshold_value = 1 # fraction < 1 = 1つ以上のリージョンで失敗
 
       aggregations {
         alignment_period   = "60s"
