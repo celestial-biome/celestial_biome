@@ -46,7 +46,7 @@ jobs:
 
       # 3b. Backend イメージの脆弱性スキャン（修正済みのCRITICALのみ対象）
       - name: Scan Backend Image
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
+        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478  # 0.34.2
         with:
           image-ref: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
           format: 'table'
@@ -125,7 +125,7 @@ jobs:
 
       # 5b. Frontend イメージの脆弱性スキャン（修正済みのCRITICALのみ対象）
       - name: Scan Frontend Image
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
+        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478  # 0.34.2
         with:
           image-ref: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}
           format: 'table'
