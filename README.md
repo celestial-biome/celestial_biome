@@ -120,10 +120,10 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Cloud**          | Google Cloud (GCP)  |                                          |
 | **Compute**        | Cloud Run           | Frontend & Backend (Standalone)          |
 | **ETL / Batch**    | Cloud Run Jobs      | Scheduled by Cloud Scheduler             |
-| **Database**       | Cloud SQL           | PostgreSQL 16 (App Data & Data Mart**) |
+| **Database**       | Cloud SQL           | PostgreSQL 16 `db-f1-micro`; 平日 9〜20時 JST のみ稼働（夜間・週末は自動停止） |
 | **Data Warehouse** | BigQuery            | Time-series data storage**             |
 | **Storage**        | Cloud Storage (GCS) | Static & Media files                     |
-| **IaC**            | Terraform + HCP Terraform Cloud | Infrastructure management; state managed by Terraform Cloud (VCS-Driven) |
+| **IaC**            | Terraform + HCP Terraform Cloud | Infrastructure management; state managed by Terraform Cloud (VCS-Driven, GitHub OAuth) |
 | **CI/CD**          | GitHub Actions      | CI, Build, Deploy                        |
 | **Monitoring**     | Sentry              | Error Tracking, Source Maps (Frontend)   |
 | **Authentication** | **Firebase Authentication** | Identity Provider (Google Login), Secure Session Management, Staging/Prod Isolation |
@@ -496,6 +496,18 @@ Sentry を活用し、Frontend / Backend 双方で包括的な監視体制を構
 **Monitoring Strategy:**
 * **Frontend:** ビルドパイプライン（CI/CD）でソースマップを自動アップロードし、Minify されたコードを復元してエラー箇所を特定可能にしています。
 * **Backend:** `sentry-sdk` の Django 統合を使用し、実行時エラーのスタックトレース収集と、API レスポンスタイムのパフォーマンストレースを実施しています。
+
+### Cloud SQL 稼働スケジュール
+
+コスト削減のため、両環境の Cloud SQL インスタンスは Cloud Scheduler + Cloud Run Job で自動停止・起動します。
+
+| スケジュール | 動作 |
+|---|---|
+| 平日 9:00 JST | インスタンス起動 (`activation-policy=ALWAYS`) |
+| 平日 20:00 JST | インスタンス停止 (`activation-policy=NEVER`) |
+| 土日・祝 | 終日停止 |
+
+> **Note:** `roles/cloudsql.editor` は組織ポリシーの制約により Terraform 管理外。`space-weather-job-runner` SA への付与は手動で実施済み。
 
 ### Database Migration
 DB マイグレーションは Terraform で定義された Cloud Run Jobs を使用して実行します。
