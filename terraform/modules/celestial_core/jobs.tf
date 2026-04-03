@@ -878,3 +878,118 @@ resource "google_cloud_run_v2_job" "create_superuser_job" {
     ]
   }
 }
+
+# ==============================================================================
+# STAGING ONLY: Cloud SQL scheduled stop/start to reduce compute costs
+# db-f1-micro runs ~$7.67/month; stopping nights/weekends saves ~$3.5/month
+# ==============================================================================
+
+# Service account with Cloud SQL Admin permission (needed to patch activation_policy)
+resource "google_service_account" "sql_controller" {
+  count        = var.env_name == "production" ? 0 : 1
+  account_id   = "sql-controller-staging"
+  display_name = "Cloud SQL Start/Stop Controller (Staging)"
+}
+
+resource "google_project_iam_member" "sql_controller_admin" {
+  count   = var.env_name == "production" ? 0 : 1
+  project = var.project_id
+  role    = "roles/cloudsql.admin"
+  member  = "serviceAccount:${google_service_account.sql_controller[0].email}"
+}
+
+# Cloud Run Job: START (activation_policy = ALWAYS)
+resource "google_cloud_run_v2_job" "sql_start_job" {
+  count               = var.env_name == "production" ? 0 : 1
+  name                = "sql-start-job-staging"
+  location            = var.region
+  deletion_protection = false
+
+  template {
+    template {
+      service_account = google_service_account.sql_controller[0].email
+
+      containers {
+        image   = "gcr.io/google.com/cloudsdktool/google-cloud-cli:slim"
+        command = ["gcloud"]
+        args = [
+          "sql", "instances", "patch",
+          google_sql_database_instance.postgres.name,
+          "--activation-policy=ALWAYS",
+          "--project=${var.project_id}",
+        ]
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [launch_stage, client, client_version]
+  }
+}
+
+# Cloud Run Job: STOP (activation_policy = NEVER)
+resource "google_cloud_run_v2_job" "sql_stop_job" {
+  count               = var.env_name == "production" ? 0 : 1
+  name                = "sql-stop-job-staging"
+  location            = var.region
+  deletion_protection = false
+
+  template {
+    template {
+      service_account = google_service_account.sql_controller[0].email
+
+      containers {
+        image   = "gcr.io/google.com/cloudsdktool/google-cloud-cli:slim"
+        command = ["gcloud"]
+        args = [
+          "sql", "instances", "patch",
+          google_sql_database_instance.postgres.name,
+          "--activation-policy=NEVER",
+          "--project=${var.project_id}",
+        ]
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [launch_stage, client, client_version]
+  }
+}
+
+# Cloud Scheduler: START at 09:00 JST weekdays
+resource "google_cloud_scheduler_job" "sql_start_schedule" {
+  count            = var.env_name == "production" ? 0 : 1
+  name             = "sql-start-staging"
+  description      = "Start staging Cloud SQL at 09:00 JST on weekdays"
+  schedule         = "0 9 * * 1-5"
+  time_zone        = "Asia/Tokyo"
+  attempt_deadline = "320s"
+
+  http_target {
+    http_method = "POST"
+    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.sql_start_job[0].name}:run"
+
+    oauth_token {
+      service_account_email = google_service_account.job_runner.email
+    }
+  }
+}
+
+# Cloud Scheduler: STOP at 20:00 JST weekdays (covers nights + weekend)
+resource "google_cloud_scheduler_job" "sql_stop_schedule" {
+  count            = var.env_name == "production" ? 0 : 1
+  name             = "sql-stop-staging"
+  description      = "Stop staging Cloud SQL at 20:00 JST on weekdays"
+  schedule         = "0 20 * * 1-5"
+  time_zone        = "Asia/Tokyo"
+  attempt_deadline = "320s"
+
+  http_target {
+    http_method = "POST"
+    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.sql_stop_job[0].name}:run"
+
+    oauth_token {
+      service_account_email = google_service_account.job_runner.email
+    }
+  }
+}
