@@ -884,11 +884,11 @@ resource "google_cloud_run_v2_job" "create_superuser_job" {
 # db-f1-micro runs ~$7.67/month; stopping nights/weekends saves ~$3.5/month
 # ==============================================================================
 
-# NOTE: roles/cloudsql.editor を job_runner SA に付与する必要があるが、
-# TF Cloud SA の権限制限により Terraform では管理不可。
+# NOTE: job_runner SA に roles/cloudsql.editor（または cloudsql.instances.update を含む
+# カスタムロール）の付与が必要だが、TF Cloud SA の権限制限により Terraform では管理不可。
 # GCP Console → IAM & Admin → IAM で手動付与が必要:
 #   Member: job-runner-staging@celestial-biome-480601.iam.gserviceaccount.com
-#   Role: roles/cloudsql.editor
+#   Role: Cloud SQL Editor
 
 # Cloud Run Job: START (activation_policy = ALWAYS)
 resource "google_cloud_run_v2_job" "sql_start_job" {
