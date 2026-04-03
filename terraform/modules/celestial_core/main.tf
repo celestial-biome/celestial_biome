@@ -158,15 +158,6 @@ resource "google_sql_database_instance" "postgres" {
     ip_configuration {
       ipv4_enabled = true
     }
-
-    # Staging はデータを BigQuery から再生成できるためバックアップ不要
-    backup_configuration {
-      enabled = var.env_name == "production"
-    }
-
-    # Staging はストレージを最小値で固定（自動拡張によるコスト増を防止）
-    disk_size       = 10
-    disk_autoresize = var.env_name == "production"
   }
 
   depends_on = [google_project_service.extra_apis]
