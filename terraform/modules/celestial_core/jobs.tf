@@ -884,18 +884,12 @@ resource "google_cloud_run_v2_job" "create_superuser_job" {
 # db-f1-micro runs ~$7.67/month; stopping nights/weekends saves ~$3.5/month
 # ==============================================================================
 
-# Service account with Cloud SQL Admin permission (needed to patch activation_policy)
-resource "google_service_account" "sql_controller" {
-  count        = var.env_name == "production" ? 0 : 1
-  account_id   = "sql-controller-staging"
-  display_name = "Cloud SQL Start/Stop Controller (Staging)"
-}
-
-resource "google_project_iam_member" "sql_controller_admin" {
+# roles/cloudsql.editor を job_runner SA に付与（activation_policy 更新に必要）
+resource "google_project_iam_member" "job_runner_sql_editor" {
   count   = var.env_name == "production" ? 0 : 1
   project = var.project_id
-  role    = "roles/cloudsql.admin"
-  member  = "serviceAccount:${google_service_account.sql_controller[0].email}"
+  role    = "roles/cloudsql.editor"
+  member  = "serviceAccount:${google_service_account.job_runner.email}"
 }
 
 # Cloud Run Job: START (activation_policy = ALWAYS)
@@ -907,7 +901,7 @@ resource "google_cloud_run_v2_job" "sql_start_job" {
 
   template {
     template {
-      service_account = google_service_account.sql_controller[0].email
+      service_account = google_service_account.job_runner.email
 
       containers {
         image   = "gcr.io/google.com/cloudsdktool/google-cloud-cli:slim"
@@ -936,7 +930,7 @@ resource "google_cloud_run_v2_job" "sql_stop_job" {
 
   template {
     template {
-      service_account = google_service_account.sql_controller[0].email
+      service_account = google_service_account.job_runner.email
 
       containers {
         image   = "gcr.io/google.com/cloudsdktool/google-cloud-cli:slim"
