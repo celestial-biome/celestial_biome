@@ -892,8 +892,7 @@ resource "google_cloud_run_v2_job" "create_superuser_job" {
 
 # Cloud Run Job: START (activation_policy = ALWAYS)
 resource "google_cloud_run_v2_job" "sql_start_job" {
-  count               = var.env_name == "production" ? 0 : 1
-  name                = "sql-start-job-staging"
+  name                = "sql-start-job-${var.env_name}"
   location            = var.region
   deletion_protection = false
 
@@ -921,8 +920,7 @@ resource "google_cloud_run_v2_job" "sql_start_job" {
 
 # Cloud Run Job: STOP (activation_policy = NEVER)
 resource "google_cloud_run_v2_job" "sql_stop_job" {
-  count               = var.env_name == "production" ? 0 : 1
-  name                = "sql-stop-job-staging"
+  name                = "sql-stop-job-${var.env_name}"
   location            = var.region
   deletion_protection = false
 
@@ -950,16 +948,15 @@ resource "google_cloud_run_v2_job" "sql_stop_job" {
 
 # Cloud Scheduler: START at 09:00 JST weekdays
 resource "google_cloud_scheduler_job" "sql_start_schedule" {
-  count            = var.env_name == "production" ? 0 : 1
-  name             = "sql-start-staging"
-  description      = "Start staging Cloud SQL at 09:00 JST on weekdays"
+  name             = "sql-start-${var.env_name}"
+  description      = "Start ${var.env_name} Cloud SQL at 09:00 JST on weekdays"
   schedule         = "0 9 * * 1-5"
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
   http_target {
     http_method = "POST"
-    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.sql_start_job[0].name}:run"
+    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.sql_start_job.name}:run"
 
     oauth_token {
       service_account_email = google_service_account.job_runner.email
@@ -969,16 +966,15 @@ resource "google_cloud_scheduler_job" "sql_start_schedule" {
 
 # Cloud Scheduler: STOP at 20:00 JST weekdays (covers nights + weekend)
 resource "google_cloud_scheduler_job" "sql_stop_schedule" {
-  count            = var.env_name == "production" ? 0 : 1
-  name             = "sql-stop-staging"
-  description      = "Stop staging Cloud SQL at 20:00 JST on weekdays"
+  name             = "sql-stop-${var.env_name}"
+  description      = "Stop ${var.env_name} Cloud SQL at 20:00 JST on weekdays"
   schedule         = "0 20 * * 1-5"
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
   http_target {
     http_method = "POST"
-    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.sql_stop_job[0].name}:run"
+    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.sql_stop_job.name}:run"
 
     oauth_token {
       service_account_email = google_service_account.job_runner.email
