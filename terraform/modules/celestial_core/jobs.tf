@@ -908,6 +908,7 @@ resource "google_cloud_run_v2_job" "sql_start_job" {
           google_sql_database_instance.postgres.name,
           "--activation-policy=ALWAYS",
           "--project=${var.project_id}",
+          "--async",
         ]
       }
     }
