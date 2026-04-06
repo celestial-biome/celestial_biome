@@ -947,11 +947,11 @@ resource "google_cloud_run_v2_job" "sql_stop_job" {
   }
 }
 
-# Cloud Scheduler: START at 09:00 JST weekdays
+# Cloud Scheduler: START at 09:00 JST daily
 resource "google_cloud_scheduler_job" "sql_start_schedule" {
   name             = "sql-start-${var.env_name}"
-  description      = "Start ${var.env_name} Cloud SQL at 09:00 JST on weekdays"
-  schedule         = "0 9 * * 1-5"
+  description      = "Start ${var.env_name} Cloud SQL at 09:00 JST daily"
+  schedule         = "0 9 * * *"
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
@@ -965,11 +965,11 @@ resource "google_cloud_scheduler_job" "sql_start_schedule" {
   }
 }
 
-# Cloud Scheduler: STOP at 20:00 JST weekdays (covers nights + weekend)
+# Cloud Scheduler: STOP at 20:00 JST daily
 resource "google_cloud_scheduler_job" "sql_stop_schedule" {
   name             = "sql-stop-${var.env_name}"
-  description      = "Stop ${var.env_name} Cloud SQL at 20:00 JST on weekdays"
-  schedule         = "0 20 * * 1-5"
+  description      = "Stop ${var.env_name} Cloud SQL at 20:00 JST daily"
+  schedule         = "0 20 * * *"
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
