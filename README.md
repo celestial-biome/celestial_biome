@@ -60,10 +60,9 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 ## 💎 Key Features: Celestial Insights
 一見無関係に見えるデータ群から、Vertex AI (Gemini 2.0) を用いて「特異点」を抽出する相関推論機能を実装しました。
 
+これらの機能は **celestial-inference** リポジトリで実装しており、API で本リポジトリと連携しています。
 
-⚠️※要改善が必要
-
-これらの機能は **celestial-inference** リポジトリで実装しており API で本リポジトリと連携しいる
+> ⚠️ **注記:** 一部機能は現在改善作業中です。
 
 ### 🌌 相関推論チャット (CelestialChat)
 宇宙天気・地震活動・世界経済の最新データを背景知識として持つ AI アドバイザー。
@@ -90,14 +89,14 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Framework**       | Django                | 5.2 LTS | App Config / ORM         |
 | **API**             | Django REST Framework | Latest      | API Construction         |
 | **Schema**          | drf-spectacular       | Latest      | Swagger UI / OpenAPI 3 |
-| **Language**        | Python                | 3.12**    |                          |
+| **Language**        | Python                | 3.12      |                          |
 | **Pkg Manager**     | uv                | Latest      | pip/poetry 使用禁止  |
 | **Lint/Fmt**        | Ruff                  | Latest      | Enforced by pre-commit   |
-| **Type Check** 　　　| Ty 　　　　　　　　　| Latest      | Static Type Checker |
+| **Type Check**      | Ty                    | Latest      | Static Type Checker      |
 | **Testing**         | pytest                | Latest      |                          |
 | **Monitoring**      | Sentry SDK (Django)   | ~2.0.0      | Runtime Error & Performance Tracking |
 | **Async**           | Cloud Tasks       | -           | No Celery/Redis          |
-| **Data Analysis**　 | Pandas            | Latest      | Data manipulation        |
+| **Data Analysis**   | Pandas                | Latest      | Data manipulation        |
 
 ### Frontend (Client Side)
 
@@ -121,7 +120,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Compute**        | Cloud Run           | Frontend & Backend (Standalone)          |
 | **ETL / Batch**    | Cloud Run Jobs      | Scheduled by Cloud Scheduler             |
 | **Database**       | Cloud SQL           | PostgreSQL 16 `db-f1-micro`; 毎日 9〜20時 JST のみ稼働（夜間は自動停止） |
-| **Data Warehouse** | BigQuery            | Time-series data storage**             |
+| **Data Warehouse** | BigQuery            | Time-series data storage               |
 | **Storage**        | Cloud Storage (GCS) | Static & Media files                     |
 | **IaC**            | Terraform + HCP Terraform Cloud | Infrastructure management; state managed by Terraform Cloud (VCS-Driven, GitHub OAuth) |
 | **CI/CD**          | GitHub Actions      | CI, Build, Deploy                        |
@@ -409,13 +408,14 @@ drf-spectacular により、OpenAPI 仕様書とインタラクティブなド�
   uv run python manage.py ingest_space_weather --days 7
   ```
 
-- Sync Data Mart (BigQuery -> Cloud SQL)
+- **Sync Data Mart (BigQuery -> Cloud SQL)**
   BigQuery から直近 7 日間のデータを取得し、Cloud SQL (Data Mart) を更新します。
   ```bash
   uv run python manage.py sync_bq_to_db
   ```
 
-### Data Safety & Governance
+## 🔐 Data Safety & Governance
+
 - Deletion Protection:
   BigQuery の Raw データテーブル (Earthquake, Economy 等) は Terraform により deletion_protection = true が設定されており、オペレーションミスによる偶発的なデータ削除を防止しています。
 
@@ -529,8 +529,10 @@ gcloud run jobs execute create-superuser-job --region asia-northeast1
 
 # Staging
 gcloud run jobs execute create-superuser-job-staging --region asia-northeast1
+```
 
-※ パスワードの確認方法:
+パスワードの確認方法:
+
+```bash
 gcloud secrets versions access latest --secret="admin-password" --project=$PROJECT_ID
-
 ```

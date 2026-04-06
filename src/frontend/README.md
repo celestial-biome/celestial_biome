@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Celestial Biome — Frontend
+
+Celestial Biome のフロントエンドアプリケーションです。Next.js (App Router) + TypeScript で構築されており、宇宙天気・地震・経済データをリアルタイムで可視化します。
+
+## Tech Stack
+
+| Technology         | Version     | Note                         |
+| ------------------ | ----------- | ---------------------------- |
+| Next.js            | 16          | App Router                   |
+| TypeScript         | 5.x         |                              |
+| Node.js            | v22 LTS     |                              |
+| Tailwind CSS       | v4          |                              |
+| Biome              | Latest      | Lint / Format（ESLint/Prettier 使用禁止） |
+| openapi-typescript | Latest      | Backend スキーマから型を自動生成 |
+| Vitest             | Latest      | Unit & Component Testing     |
+| ECharts            | 6.x         | Charts & Graphs              |
 
 ## Getting Started
 
-First, run the development server:
+依存関係をインストールします。
+
+```bash
+cd src/frontend
+npm install
+```
+
+開発サーバーを起動します（プロジェクトルートの Docker Compose を使用する場合は不要）。
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- App: http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Code Quality
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Lint & Format（コミット前に実行）
+npx biome check --write .
+```
 
-## Learn More
+Biome は pre-commit フックで自動実行されます。ESLint / Prettier は使用禁止です。
 
-To learn more about Next.js, take a look at the following resources:
+## Testing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# src/frontend で実行
+npm test
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+主なテストファイル:
 
-## Deploy on Vercel
+- `utils.test.ts`: ロジック関数の単体テスト
+- `chart-options.test.ts`: グラフ設定（ECharts）のスナップショットテスト
+- `ui-parts.test.tsx`: UI コンポーネントの描画テスト
+- `useSpaceWeather.test.ts`: カスタムフックとデータ取得フローのテスト
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Type Generation (Schema Driven)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Backend の OpenAPI スキーマ (`schema.yml`) から TypeScript 型を自動生成します。
+
+```bash
+# schema.yml を更新後に実行
+npx openapi-typescript ../backend/schema.yml -o src/types/api.d.ts
+```
+
+詳細はルートの `README.md` — **Schema Driven Development** セクションを参照してください。
