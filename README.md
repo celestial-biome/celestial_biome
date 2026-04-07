@@ -314,8 +314,8 @@ graph LR
     Inference -- "JSON Response with Context" --> Backend
 ```
 **参考（NOAA Space Weather）**
-1.  **Ingestion (ETL)**: Cloud Run Job (`ingest_space_weather`) が NOAA からデータを取得し、**BigQuery** に蓄積 (毎時 0 分実行)。
-2.  **Sync (Data Mart)**: Cloud Run Job (`sync_bq_to_db`) が BigQuery から直近 7 日分のデータを集計・取得し、**Cloud SQL** の専用テーブルに洗い替え (毎時 5 分実行)。
+1.  **Ingestion (ETL)**: Cloud Run Job (`ingest_space_weather`) が NOAA からデータを取得し、**BigQuery** に蓄積 (毎時 10 分実行、Cloud SQL 稼動時間 09:10〜19:10 JST のみ)。
+2.  **Sync (Data Mart)**: Cloud Run Job (`sync_bq_to_db`) が BigQuery から直近 7 日分のデータを集計・取得し、**Cloud SQL** の専用テーブルに洗い替え (毎時 15 分実行、Cloud SQL 稼動時間 09:15〜19:15 JST のみ)。
     - **Transaction**: データの不整合を防ぐため、`transaction.atomic` を用いて全削除・一括挿入（Bulk Create）を安全に行います。
 3.  **Serving**: Backend API は **Cloud SQL** を参照してデータを返却。これにより、BigQuery の起動オーバーヘッドを回避し、高速なレスポンスを実現。
     - **Optimization**: 取得したデータに対し、Pandas を用いて Pivot 変換（Long -> Wide）や欠損値の補完（Forward Fill）を行い、Frontend が描画しやすい形式でレスポンスします。
@@ -499,12 +499,23 @@ Sentry を活用し、Frontend / Backend 双方で包括的な監視体制を構
 
 ### Cloud SQL 稼働スケジュール
 
-コスト削減のため、両環境の Cloud SQL インスタンスは Cloud Scheduler + Cloud Run Job で自動停止・起動します。
+コスト削減のため、両環境の Cloud SQL インスタンスは Cloud Scheduler が Cloud SQL Admin API を直接呼び出して自動停止・起動します（Cloud Run Job は経由しません）。
 
 | スケジュール | 動作 |
 |---|---|
 | 毎日 9:00 JST | インスタンス起動 (`activation-policy=ALWAYS`) |
 | 毎日 20:00 JST | インスタンス停止 (`activation-policy=NEVER`) |
+
+全バッチジョブは Cloud SQL 稼動時間（09:10〜19:xx JST）にのみ実行されます。
+
+| ジョブ | スケジュール（JST） |
+|---|---|
+| ingest_space_weather | 毎時 :10（09:10〜19:10） |
+| sync_bq_to_db（宇宙天気） | 毎時 :15（09:15〜19:15） |
+| ingest_earthquakes | 毎時 :10, :25, :40（09:10〜19:40） |
+| sync_earthquakes_to_db | 毎時 :15, :30, :45（09:15〜19:45） |
+| ingest_economy | 毎日 10:00 |
+| sync_economy_db | 毎日 10:30 |
 
 > **Note:** `roles/cloudsql.editor` は組織ポリシーの制約により Terraform 管理外。`space-weather-job-runner`（prod）および `job-runner-staging`（staging）SA への付与は手動で実施済み。
 
