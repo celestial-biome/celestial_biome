@@ -61,6 +61,7 @@ resource "google_cloud_run_v2_job" "ingest_job" {
   template {
     template {
       service_account = google_service_account.job_runner.email
+      max_retries     = 1
 
       containers {
         image   = "us-docker.pkg.dev/cloudrun/container/hello" # CI/CDで更新
@@ -140,7 +141,7 @@ resource "google_cloud_run_v2_job" "ingest_job" {
 resource "google_cloud_scheduler_job" "ingest_schedule" {
   name             = "schedule-space-weather${local.suffix}"
   description      = "Trigger Cloud Run Job to ingest space weather data"
-  schedule         = "0 * * * *" # 毎時0分
+  schedule         = "10 9-19 * * *" # 毎時10分（Cloud SQL 起動後10分待機、09:10〜19:10）
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
@@ -165,6 +166,7 @@ resource "google_cloud_run_v2_job" "sync_db_job" {
   template {
     template {
       service_account = google_service_account.job_runner.email
+      max_retries     = 1
 
       containers {
         image   = "us-docker.pkg.dev/cloudrun/container/hello"
@@ -244,7 +246,7 @@ resource "google_cloud_run_v2_job" "sync_db_job" {
 resource "google_cloud_scheduler_job" "sync_schedule" {
   name             = "schedule-sync-space-weather${local.suffix}"
   description      = "Trigger Cloud Run Job to sync space weather data from BQ to DB"
-  schedule         = "5 * * * *" # 毎時5分
+  schedule         = "15 9-19 * * *" # 毎時15分（ingest の5分後、09:15〜19:15）
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
@@ -274,6 +276,7 @@ resource "google_cloud_run_v2_job" "ingest_earthquakes_job" {
   template {
     template {
       service_account = google_service_account.job_runner.email
+      max_retries     = 1
 
       containers {
         image = "us-docker.pkg.dev/cloudrun/container/hello" # CI/CDで更新
@@ -355,7 +358,7 @@ resource "google_cloud_run_v2_job" "ingest_earthquakes_job" {
 resource "google_cloud_scheduler_job" "ingest_earthquakes_trigger" {
   name             = "schedule-ingest-earthquakes${local.suffix}"
   description      = "Trigger Cloud Run Job to ingest earthquake data (Every 15 mins)"
-  schedule         = "*/15 * * * *" # 15分ごとに実行
+  schedule         = "10,25,40 9-19 * * *" # 15分ごとに実行（Cloud SQL 起動後10分待機、09:10〜19:40、20:00停止前に余裕を持たせる）
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
@@ -380,6 +383,7 @@ resource "google_cloud_run_v2_job" "sync_earthquakes_job" {
   template {
     template {
       service_account = google_service_account.job_runner.email
+      max_retries     = 1
 
       containers {
         image = "us-docker.pkg.dev/cloudrun/container/hello"
@@ -460,8 +464,8 @@ resource "google_cloud_run_v2_job" "sync_earthquakes_job" {
 resource "google_cloud_scheduler_job" "sync_earthquakes_trigger" {
   name        = "schedule-sync-earthquakes${local.suffix}"
   description = "Trigger Cloud Run Job to sync earthquake data to DB"
-  # Ingestの5分後に実行 (毎時 5, 20, 35, 50分)
-  schedule         = "5,20,35,50 * * * *"
+  # Ingestの5分後に実行 (毎時 15, 30, 45分、Cloud SQL 起動後10分待機、09:15〜19:45)
+  schedule         = "15,30,45 9-19 * * *"
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
@@ -490,6 +494,7 @@ resource "google_cloud_run_v2_job" "ingest_economy_job" {
   template {
     template {
       service_account = google_service_account.job_runner.email
+      max_retries     = 1
 
       containers {
         image = "us-docker.pkg.dev/cloudrun/container/hello" # CI/CDで更新
@@ -569,8 +574,8 @@ resource "google_cloud_run_v2_job" "ingest_economy_job" {
 # -----------------------------------------------------
 resource "google_cloud_scheduler_job" "ingest_economy_trigger" {
   name             = "schedule-ingest-economy${local.suffix}"
-  description      = "Trigger Cloud Run Job to ingest economy data (Daily 07:00 JST)"
-  schedule         = "0 7 * * *" # 毎日 07:00 JST
+  description      = "Trigger Cloud Run Job to ingest economy data (Daily 10:00 JST)"
+  schedule         = "0 10 * * *" # 毎日 10:00 JST（Cloud SQL 稼動時間内に変更）
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
@@ -595,6 +600,7 @@ resource "google_cloud_run_v2_job" "sync_economy_job" {
   template {
     template {
       service_account = google_service_account.job_runner.email
+      max_retries     = 1
 
       containers {
         image = "us-docker.pkg.dev/cloudrun/container/hello"
@@ -674,8 +680,8 @@ resource "google_cloud_run_v2_job" "sync_economy_job" {
 # -----------------------------------------------------
 resource "google_cloud_scheduler_job" "sync_economy_trigger" {
   name             = "schedule-sync-economy${local.suffix}"
-  description      = "Trigger Cloud Run Job to sync economy data to DB (Daily 07:30 JST)"
-  schedule         = "30 7 * * *" # 毎日 07:30 JST
+  description      = "Trigger Cloud Run Job to sync economy data to DB (Daily 10:30 JST)"
+  schedule         = "30 10 * * *" # 毎日 10:30 JST（Cloud SQL 稼動時間内に変更、ingest の30分後）
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
@@ -890,64 +896,8 @@ resource "google_cloud_run_v2_job" "create_superuser_job" {
 #   Member: job-runner-staging@celestial-biome-480601.iam.gserviceaccount.com
 #   Role: Cloud SQL Editor
 
-# Cloud Run Job: START (activation_policy = ALWAYS)
-resource "google_cloud_run_v2_job" "sql_start_job" {
-  name                = "sql-start-job-${var.env_name}"
-  location            = var.region
-  deletion_protection = false
-
-  template {
-    template {
-      service_account = google_service_account.job_runner.email
-
-      containers {
-        image   = "gcr.io/google.com/cloudsdktool/google-cloud-cli:slim"
-        command = ["gcloud"]
-        args = [
-          "sql", "instances", "patch",
-          google_sql_database_instance.postgres.name,
-          "--activation-policy=ALWAYS",
-          "--project=${var.project_id}",
-          "--async",
-        ]
-      }
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [launch_stage, client, client_version]
-  }
-}
-
-# Cloud Run Job: STOP (activation_policy = NEVER)
-resource "google_cloud_run_v2_job" "sql_stop_job" {
-  name                = "sql-stop-job-${var.env_name}"
-  location            = var.region
-  deletion_protection = false
-
-  template {
-    template {
-      service_account = google_service_account.job_runner.email
-
-      containers {
-        image   = "gcr.io/google.com/cloudsdktool/google-cloud-cli:slim"
-        command = ["gcloud"]
-        args = [
-          "sql", "instances", "patch",
-          google_sql_database_instance.postgres.name,
-          "--activation-policy=NEVER",
-          "--project=${var.project_id}",
-        ]
-      }
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [launch_stage, client, client_version]
-  }
-}
-
 # Cloud Scheduler: START at 09:00 JST daily
+# Cloud SQL Admin API を直接呼び出すことで Cloud Run Job のコンテナ起動コストを排除
 resource "google_cloud_scheduler_job" "sql_start_schedule" {
   name             = "sql-start-${var.env_name}"
   description      = "Start ${var.env_name} Cloud SQL at 09:00 JST daily"
@@ -956,11 +906,17 @@ resource "google_cloud_scheduler_job" "sql_start_schedule" {
   attempt_deadline = "320s"
 
   http_target {
-    http_method = "POST"
-    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.sql_start_job.name}:run"
+    http_method = "PATCH"
+    uri         = "https://sqladmin.googleapis.com/sql/v1beta4/projects/${var.project_id}/instances/${google_sql_database_instance.postgres.name}"
+    body        = base64encode(jsonencode({ settings = { activationPolicy = "ALWAYS" } }))
+
+    headers = {
+      "Content-Type" = "application/json"
+    }
 
     oauth_token {
       service_account_email = google_service_account.job_runner.email
+      scope                 = "https://www.googleapis.com/auth/cloud-platform"
     }
   }
 }
@@ -974,11 +930,17 @@ resource "google_cloud_scheduler_job" "sql_stop_schedule" {
   attempt_deadline = "320s"
 
   http_target {
-    http_method = "POST"
-    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/${google_cloud_run_v2_job.sql_stop_job.name}:run"
+    http_method = "PATCH"
+    uri         = "https://sqladmin.googleapis.com/sql/v1beta4/projects/${var.project_id}/instances/${google_sql_database_instance.postgres.name}"
+    body        = base64encode(jsonencode({ settings = { activationPolicy = "NEVER" } }))
+
+    headers = {
+      "Content-Type" = "application/json"
+    }
 
     oauth_token {
       service_account_email = google_service_account.job_runner.email
+      scope                 = "https://www.googleapis.com/auth/cloud-platform"
     }
   }
 }
