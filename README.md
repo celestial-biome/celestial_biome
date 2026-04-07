@@ -60,10 +60,9 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 ## 💎 Key Features: Celestial Insights
 一見無関係に見えるデータ群から、Vertex AI (Gemini 2.0) を用いて「特異点」を抽出する相関推論機能を実装しました。
 
+これらの機能は **celestial-inference** リポジトリで実装しており、API で本リポジトリと連携しています。
 
-⚠️※要改善が必要
-
-これらの機能は **celestial-inference** リポジトリで実装しており API で本リポジトリと連携しいる
+> ⚠️ **注記:** 一部機能は現在改善作業中です。
 
 ### 🌌 相関推論チャット (CelestialChat)
 宇宙天気・地震活動・世界経済の最新データを背景知識として持つ AI アドバイザー。
@@ -90,14 +89,14 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Framework**       | Django                | 5.2 LTS | App Config / ORM         |
 | **API**             | Django REST Framework | Latest      | API Construction         |
 | **Schema**          | drf-spectacular       | Latest      | Swagger UI / OpenAPI 3 |
-| **Language**        | Python                | 3.12**    |                          |
+| **Language**        | Python                | 3.12      |                          |
 | **Pkg Manager**     | uv                | Latest      | pip/poetry 使用禁止  |
 | **Lint/Fmt**        | Ruff                  | Latest      | Enforced by pre-commit   |
-| **Type Check** 　　　| Ty 　　　　　　　　　| Latest      | Static Type Checker |
+| **Type Check**      | Ty                    | Latest      | Static Type Checker      |
 | **Testing**         | pytest                | Latest      |                          |
 | **Monitoring**      | Sentry SDK (Django)   | ~2.0.0      | Runtime Error & Performance Tracking |
 | **Async**           | Cloud Tasks       | -           | No Celery/Redis          |
-| **Data Analysis**　 | Pandas            | Latest      | Data manipulation        |
+| **Data Analysis**   | Pandas                | Latest      | Data manipulation        |
 
 ### Frontend (Client Side)
 
@@ -121,7 +120,7 @@ Google Cloud Platform (GCP) 上に構築され、最新の技術スタックと�
 | **Compute**        | Cloud Run           | Frontend & Backend (Standalone)          |
 | **ETL / Batch**    | Cloud Run Jobs      | Scheduled by Cloud Scheduler             |
 | **Database**       | Cloud SQL           | PostgreSQL 16 `db-f1-micro`; 毎日 9〜20時 JST のみ稼働（夜間は自動停止） |
-| **Data Warehouse** | BigQuery            | Time-series data storage**             |
+| **Data Warehouse** | BigQuery            | Time-series data storage               |
 | **Storage**        | Cloud Storage (GCS) | Static & Media files                     |
 | **IaC**            | Terraform + HCP Terraform Cloud | Infrastructure management; state managed by Terraform Cloud (VCS-Driven, GitHub OAuth) |
 | **CI/CD**          | GitHub Actions      | CI, Build, Deploy                        |
@@ -315,8 +314,8 @@ graph LR
     Inference -- "JSON Response with Context" --> Backend
 ```
 **参考（NOAA Space Weather）**
-1.  **Ingestion (ETL)**: Cloud Run Job (`ingest_space_weather`) が NOAA からデータを取得し、**BigQuery** に蓄積 (毎時 0 分実行)。
-2.  **Sync (Data Mart)**: Cloud Run Job (`sync_bq_to_db`) が BigQuery から直近 7 日分のデータを集計・取得し、**Cloud SQL** の専用テーブルに洗い替え (毎時 5 分実行)。
+1.  **Ingestion (ETL)**: Cloud Run Job (`ingest_space_weather`) が NOAA からデータを取得し、**BigQuery** に蓄積 (毎時 10 分実行、Cloud SQL 稼動時間 09:10〜19:10 JST のみ)。
+2.  **Sync (Data Mart)**: Cloud Run Job (`sync_bq_to_db`) が BigQuery から直近 7 日分のデータを集計・取得し、**Cloud SQL** の専用テーブルに洗い替え (毎時 15 分実行、Cloud SQL 稼動時間 09:15〜19:15 JST のみ)。
     - **Transaction**: データの不整合を防ぐため、`transaction.atomic` を用いて全削除・一括挿入（Bulk Create）を安全に行います。
 3.  **Serving**: Backend API は **Cloud SQL** を参照してデータを返却。これにより、BigQuery の起動オーバーヘッドを回避し、高速なレスポンスを実現。
     - **Optimization**: 取得したデータに対し、Pandas を用いて Pivot 変換（Long -> Wide）や欠損値の補完（Forward Fill）を行い、Frontend が描画しやすい形式でレスポンスします。
@@ -409,13 +408,14 @@ drf-spectacular により、OpenAPI 仕様書とインタラクティブなド�
   uv run python manage.py ingest_space_weather --days 7
   ```
 
-- Sync Data Mart (BigQuery -> Cloud SQL)
+- **Sync Data Mart (BigQuery -> Cloud SQL)**
   BigQuery から直近 7 日間のデータを取得し、Cloud SQL (Data Mart) を更新します。
   ```bash
   uv run python manage.py sync_bq_to_db
   ```
 
-### Data Safety & Governance
+## 🔐 Data Safety & Governance
+
 - Deletion Protection:
   BigQuery の Raw データテーブル (Earthquake, Economy 等) は Terraform により deletion_protection = true が設定されており、オペレーションミスによる偶発的なデータ削除を防止しています。
 
@@ -499,12 +499,23 @@ Sentry を活用し、Frontend / Backend 双方で包括的な監視体制を構
 
 ### Cloud SQL 稼働スケジュール
 
-コスト削減のため、両環境の Cloud SQL インスタンスは Cloud Scheduler + Cloud Run Job で自動停止・起動します。
+コスト削減のため、両環境の Cloud SQL インスタンスは Cloud Scheduler が Cloud SQL Admin API を直接呼び出して自動停止・起動します（Cloud Run Job は経由しません）。
 
 | スケジュール | 動作 |
 |---|---|
 | 毎日 9:00 JST | インスタンス起動 (`activation-policy=ALWAYS`) |
 | 毎日 20:00 JST | インスタンス停止 (`activation-policy=NEVER`) |
+
+全バッチジョブは Cloud SQL 稼動時間（09:10〜19:xx JST）にのみ実行されます。
+
+| ジョブ | スケジュール（JST） |
+|---|---|
+| ingest_space_weather | 毎時 :10（09:10〜19:10） |
+| sync_bq_to_db（宇宙天気） | 毎時 :15（09:15〜19:15） |
+| ingest_earthquakes | 毎時 :10, :25, :40（09:10〜19:40） |
+| sync_earthquakes_to_db | 毎時 :15, :30, :45（09:15〜19:45） |
+| ingest_economy | 毎日 10:00 |
+| sync_economy_db | 毎日 10:30 |
 
 > **Note:** `roles/cloudsql.editor` は組織ポリシーの制約により Terraform 管理外。`space-weather-job-runner`（prod）および `job-runner-staging`（staging）SA への付与は手動で実施済み。
 
@@ -529,8 +540,10 @@ gcloud run jobs execute create-superuser-job --region asia-northeast1
 
 # Staging
 gcloud run jobs execute create-superuser-job-staging --region asia-northeast1
+```
 
-※ パスワードの確認方法:
+パスワードの確認方法:
+
+```bash
 gcloud secrets versions access latest --secret="admin-password" --project=$PROJECT_ID
-
 ```
