@@ -54,6 +54,47 @@ jobs:
           ignore-unfixed: true
           exit-code: '1'
 
+      # Cloud SQL が停止中の場合に起動して RUNNABLE になるまで待機
+      - name: Ensure Cloud SQL is running
+        run: |
+          CONNECTION=$(gcloud run services describe celestial-backend \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
+            --format="value(metadata.annotations['run.googleapis.com/cloudsql-instances'])")
+          INSTANCE=$(echo "$CONNECTION" | cut -d: -f3)
+          echo "Cloud SQL instance: $INSTANCE"
+
+          STATE=$(gcloud sql instances describe "$INSTANCE" \
+            --project ${{ env.PROJECT_ID }} \
+            --format="value(state)")
+          echo "Current state: $STATE"
+
+          if [ "$STATE" != "RUNNABLE" ]; then
+            echo "Starting Cloud SQL instance..."
+            gcloud sql instances patch "$INSTANCE" \
+              --activation-policy=ALWAYS \
+              --project ${{ env.PROJECT_ID }}
+
+            for i in $(seq 1 20); do
+              sleep 15
+              STATE=$(gcloud sql instances describe "$INSTANCE" \
+                --project ${{ env.PROJECT_ID }} \
+                --format="value(state)")
+              echo "State check $i/20: $STATE"
+              if [ "$STATE" = "RUNNABLE" ]; then
+                echo "Cloud SQL is now RUNNABLE"
+                break
+              fi
+            done
+
+            if [ "$STATE" != "RUNNABLE" ]; then
+              echo "::error::Cloud SQL did not become RUNNABLE within 5 minutes"
+              exit 1
+            fi
+          else
+            echo "Cloud SQL is already RUNNABLE"
+          fi
+
       # DBマイグレーションの実行 イメージを更新してから実行
       - name: Run DB Migration
         run: |
