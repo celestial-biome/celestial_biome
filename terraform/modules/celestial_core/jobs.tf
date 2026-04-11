@@ -357,8 +357,8 @@ resource "google_cloud_run_v2_job" "ingest_earthquakes_job" {
 # -----------------------------------------------------
 resource "google_cloud_scheduler_job" "ingest_earthquakes_trigger" {
   name             = "schedule-ingest-earthquakes${local.suffix}"
-  description      = "Trigger Cloud Run Job to ingest earthquake data (Every 15 mins)"
-  schedule         = "10,25,40 9-19 * * *" # 15分ごとに実行（Cloud SQL 起動後10分待機、09:10〜19:40、20:00停止前に余裕を持たせる）
+  description      = "Trigger Cloud Run Job to ingest earthquake data (Every hour)"
+  schedule         = "10 9-19 * * *" # 毎時1回（Cloud SQL 起動後10分待機、09:10〜19:10）
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
@@ -464,8 +464,8 @@ resource "google_cloud_run_v2_job" "sync_earthquakes_job" {
 resource "google_cloud_scheduler_job" "sync_earthquakes_trigger" {
   name        = "schedule-sync-earthquakes${local.suffix}"
   description = "Trigger Cloud Run Job to sync earthquake data to DB"
-  # Ingestの5分後に実行 (毎時 15, 30, 45分、Cloud SQL 起動後10分待機、09:15〜19:45)
-  schedule         = "15,30,45 9-19 * * *"
+  # Ingestの5分後に実行 (毎時 15分、Cloud SQL 起動後10分待機、09:15〜19:15)
+  schedule         = "15 9-19 * * *"
   time_zone        = "Asia/Tokyo"
   attempt_deadline = "320s"
 
