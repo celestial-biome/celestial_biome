@@ -155,6 +155,10 @@ resource "google_sql_database_instance" "postgres" {
     tier    = "db-f1-micro"
     edition = "ENTERPRISE"
 
+    user_labels = {
+      env = var.env_name
+    }
+
     ip_configuration {
       ipv4_enabled = true
     }
