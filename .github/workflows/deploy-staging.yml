@@ -37,7 +37,7 @@ jobs:
 
       # 3. Build & Push (Backend)
       - name: Build and Push Backend
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294  # v7.0.0
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf  # v7.2.0
         with:
           context: ./src/backend
           file: ./src/backend/Dockerfile
@@ -46,7 +46,7 @@ jobs:
 
       # 3b. Backend イメージの脆弱性スキャン（修正済みのCRITICALのみ対象）
       - name: Scan Backend Image
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.34.2
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.34.2
         with:
           image-ref: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}
           format: 'table'
@@ -104,7 +104,7 @@ jobs:
 
       # 5. Build & Push (Frontend)
       - name: Build and Push Frontend
-        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294  # v7.0.0
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf  # v7.2.0
         with:
           context: ./src/frontend
           file: ./src/frontend/Dockerfile
@@ -125,7 +125,7 @@ jobs:
 
       # 5b. Frontend イメージの脆弱性スキャン（修正済みのCRITICALのみ対象）
       - name: Scan Frontend Image
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.34.2
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.34.2
         with:
           image-ref: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}
           format: 'table'
