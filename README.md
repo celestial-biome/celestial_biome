@@ -1,7 +1,7 @@
 # Celestial Biome
 
 **Celestial Biome is a platform designed to discover "Singularities"—qualitative turning points and unseen insights—by integrating diverse measurable data.**
-
+test2
 Celestial Biome は、さまざまな計測可能なデータを蓄積・統合し、そこから**「特異点（質的な転換点）」**を見つけ出すプラットフォームプロジェクトです。（開発中）
 
 一見無関係に見える以下の要素を横断的に可視化し、複雑系の中に潜む相関関係を明らかにすることで、人生やプロジェクトにおける意思決定の新たな羅針盤を構築しています。
